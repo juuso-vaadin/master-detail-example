@@ -4,7 +4,7 @@ vaadin-master-detail-layout::part(detail) {
     border: none;
 }
 
-vaadin-master-detail-layout:not([has-detail])::after {
+vaadin-master-detail-layout.show-placeholder:not([has-detail])::after {
     content: "Select an item to see details";
     color: var(--lumo-tertiary-text-color);
     display: flex;
@@ -12,6 +12,14 @@ vaadin-master-detail-layout:not([has-detail])::after {
     justify-content: center;
     width: 100%;
     height: 100%;
+}
+
+vaadin-master-detail-layout[drawer] vaadin-master-detail-layout.nested-master-detail {
+    padding: 0;
+
+    .border {
+        border: none;
+    }
 }
 
 vaadin-master-detail-layout[orientation="horizontal"][has-master-size]::part(master) {
@@ -32,7 +40,7 @@ vaadin-master-detail-layout[drawer] .detail-close-button {
     vaadin-master-detail-layout[orientation="horizontal"][has-master-size]::part(master) {
         flex-grow: 1;
     }
-    vaadin-master-detail-layout:not([has-detail])::after {
+    vaadin-master-detail-layout.show-placeholder:not([has-detail])::after {
         display: none;
     }
 }

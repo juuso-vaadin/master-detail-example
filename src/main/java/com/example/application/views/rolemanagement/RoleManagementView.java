@@ -51,13 +51,13 @@ public class RoleManagementView extends VerticalLayout {
     
     // Main layout components
     private MasterDetailLayout masterDetailLayout;
+    private MasterDetailLayout nestedMasterDetailLayout;
     
     // Master section components
     private VerticalLayout masterContent;
     private VerticalLayout roleItemsContainer;
     
-    // Detail section components
-    private VerticalLayout detailContent;
+    // Form field components
     private DatePicker startDatePicker;
     private DatePicker endDatePicker;
     private IntegerField utilizationField;
@@ -118,6 +118,8 @@ public class RoleManagementView extends VerticalLayout {
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
         masterDetailLayout.setSizeFull();
+        masterDetailLayout.addClassName("show-placeholder");
+        masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
         
         // Configure MasterDetailLayout
         masterDetailLayout.setMasterSize("400px");
@@ -206,7 +208,6 @@ public class RoleManagementView extends VerticalLayout {
         // Employee info section
         H3 employeeName = new H3(employee.getFullName());
         employeeName.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        employeeName.getStyle().set("margin", "0");
         
         Span personalInfo = new Span("Personal no " + employee.getPersonalNumber());
         personalInfo.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.MEDIUM);
@@ -233,9 +234,7 @@ public class RoleManagementView extends VerticalLayout {
         cardContent.setPadding(true);
         cardContent.addClassNames(LumoUtility.Background.BASE, LumoUtility.BorderRadius.MEDIUM);
         cardContent.getStyle()
-            .set("border", "1px solid var(--lumo-contrast-10pct)")
-            .set("margin-bottom", "24px");
-        
+            .set("border", "1px solid var(--lumo-contrast-10pct)");        
         masterContent.add(cardContent);
     }
 
@@ -246,7 +245,6 @@ public class RoleManagementView extends VerticalLayout {
         // Section title using H3 for 16px Semi Bold text  
         H3 sectionTitle = new H3("Assigned roles");
         sectionTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.MEDIUM, LumoUtility.FontWeight.SEMIBOLD);
-        sectionTitle.getStyle().set("margin", "0");
         
         // Add role button based on Figma "Button" component
         Button addRoleButton = new Button("Add role");
@@ -257,7 +255,7 @@ public class RoleManagementView extends VerticalLayout {
         toolbar.setWidthFull();
         toolbar.setJustifyContentMode(HorizontalLayout.JustifyContentMode.BETWEEN);
         toolbar.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        toolbar.getStyle().set("margin-bottom", "24px");
+        toolbar.addClassName(LumoUtility.Padding.Vertical.MEDIUM);
         
         masterContent.add(toolbar);
     }
@@ -290,7 +288,6 @@ public class RoleManagementView extends VerticalLayout {
         // Use Card's Title slot for role name (proper semantic heading)
         H4 roleTitle = new H4(role.getName());
         roleTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        roleTitle.getStyle().set("margin", "0");
         card.setTitle(roleTitle);
         
         // Use Card's Subtitle slot for date range
@@ -342,71 +339,13 @@ public class RoleManagementView extends VerticalLayout {
      */
     private void showRoleDetail(Role role) {
         currentSelectedRole = role;
-        if (detailContent == null) {
-            createDetailSection();
+        if (nestedMasterDetailLayout == null) {
+            createNestedMasterDetailLayout();
         }
         
         // Update form with role data
         populateDetailForm(role);
-        masterDetailLayout.setDetail(detailContent);
-    }
-
-    /**
-     * Creates the detail section with form fields and info card
-     */
-    private void createDetailSection() {
-        detailContent = new VerticalLayout();
-        detailContent.setSizeFull();
-        detailContent.setPadding(true);
-        detailContent.setSpacing(false);
-        detailContent.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderRadius.MEDIUM, LumoUtility.BorderColor.CONTRAST_10);
-        
-        createDetailForm();
-    }
-
-    /**
-     * Creates the detail form based on Figma form components
-     */
-    private void createDetailForm() {
-        // Detail header with close button
-        H2 detailTitle = new H2("Product owner");
-        detailTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        detailTitle.getStyle().set("margin", "0");
-        
-        // Close button (X icon) - only visible in drawer mode
-        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
-        closeButton.addClickListener(e -> hideDetail());
-        closeButton.addClassName("detail-close-button");
-        closeButton.getStyle().set("margin-left", "auto");
-        
-        // Header layout with title and close button
-        HorizontalLayout detailHeader = new HorizontalLayout(detailTitle, closeButton);
-        detailHeader.setWidthFull();
-        detailHeader.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        detailHeader.getStyle().set("margin-bottom", "24px");
-        
-        // Form layout
-        HorizontalLayout formContent = new HorizontalLayout();
-        formContent.setSizeFull();
-        formContent.setSpacing(true);
-        formContent.setWrap(true);
-        formContent.addClassNames(LumoUtility.AlignContent.START, LumoUtility.AlignItems.START);
-        
-        // Left side - form fields
-        VerticalLayout formFields = createFormFields();
-        formFields.setWidth("fit-content");
-        formFields.addClassName(LumoUtility.Flex.AUTO);
-
-        
-        // Right side - info card
-        VerticalLayout infoCard = createInfoCard();
-        infoCard.setWidth("300px"); // Based on Figma metadata
-        infoCard.addClassName(LumoUtility.Flex.AUTO);
-        
-        formContent.add(formFields, infoCard);
-        
-        detailContent.add(detailHeader, formContent);
+        masterDetailLayout.setDetail(nestedMasterDetailLayout);
     }
 
     /**
@@ -463,7 +402,6 @@ public class RoleManagementView extends VerticalLayout {
         
         H3 cardTitle = new H3("Role info");
         cardTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        cardTitle.getStyle().set("margin", "0 0 16px 0");
         
         Paragraph cardContent = new Paragraph(
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
@@ -472,7 +410,12 @@ public class RoleManagementView extends VerticalLayout {
         );
         cardContent.addClassNames(LumoUtility.TextColor.BODY);
         
-        card.add(cardTitle, cardContent);
+        // Show more button to trigger nested master-detail
+        Button showMoreButton = new Button("Show more");
+        showMoreButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        showMoreButton.addClickListener(e -> showNestedDetail());
+        
+        card.add(cardTitle, cardContent, showMoreButton);
         return card;
     }
 
@@ -482,8 +425,9 @@ public class RoleManagementView extends VerticalLayout {
     private void populateDetailForm(Role role) {
         if (role == null) return;
         
-        // Update detail title (first component in the header layout)
-        HorizontalLayout detailHeader = (HorizontalLayout) detailContent.getComponentAt(0);
+        // Update detail title (now inside the nested master detail layout's master content)
+        VerticalLayout nestedMasterContent = (VerticalLayout) nestedMasterDetailLayout.getMaster();
+        HorizontalLayout detailHeader = (HorizontalLayout) nestedMasterContent.getComponentAt(0);
         H2 detailTitle = (H2) detailHeader.getComponentAt(0);
         detailTitle.setText(role.getName());
         
@@ -507,6 +451,123 @@ public class RoleManagementView extends VerticalLayout {
             currentSelectedRole.setSelected(false);
             currentSelectedRole = null;
             refreshRoleSelection();
+        }
+    }
+
+    /**
+     * Creates the nested MasterDetailLayout that contains the form as master
+     */
+    private void createNestedMasterDetailLayout() {
+        nestedMasterDetailLayout = new MasterDetailLayout();
+        nestedMasterDetailLayout.addClassName("nested-master-detail");
+        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+        //nestedMasterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
+        nestedMasterDetailLayout.setSizeFull();
+        nestedMasterDetailLayout.setDetailMinSize("300px");
+        nestedMasterDetailLayout.addClassNames(LumoUtility.Padding.Right.MEDIUM, LumoUtility.Padding.Bottom.MEDIUM);
+        
+        // Create the master content as a vertical layout to include header + form
+        VerticalLayout masterContent = new VerticalLayout();
+        masterContent.setSizeFull();
+        masterContent.setPadding(true);
+        masterContent.setSpacing(false);
+        masterContent.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderRadius.MEDIUM, LumoUtility.BorderColor.CONTRAST_10);
+        
+        // Detail header with close button
+        H2 detailTitle = new H2("Product owner");
+        detailTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
+        
+        // Close button (X icon) - only visible in drawer mode
+        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE));
+        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+        closeButton.addClickListener(e -> hideDetail());
+        closeButton.addClassName("detail-close-button");
+        closeButton.getStyle().set("margin-left", "auto");
+        
+        // Header layout with title and close button
+        HorizontalLayout detailHeader = new HorizontalLayout(detailTitle, closeButton);
+        detailHeader.setWidthFull();
+        detailHeader.setAlignItems(HorizontalLayout.Alignment.CENTER);
+        
+        // Create the form content
+        HorizontalLayout formContent = new HorizontalLayout();
+        formContent.setSizeFull();
+        formContent.setSpacing(true);
+        formContent.setWrap(true);
+        formContent.addClassNames(LumoUtility.AlignContent.START, LumoUtility.AlignItems.START);
+        
+        // Left side - form fields
+        VerticalLayout formFields = createFormFields();
+        formFields.setWidth("fit-content");
+        formFields.addClassName(LumoUtility.Flex.AUTO);
+        
+        // Right side - info card
+        VerticalLayout infoCard = createInfoCard();
+        infoCard.setWidth("300px"); // Based on Figma metadata
+        infoCard.addClassName(LumoUtility.Flex.AUTO);
+        
+        formContent.add(formFields, infoCard);
+        
+        // Add header and form content to master
+        masterContent.add(detailHeader, formContent);
+        
+        // Set the master content (header + form) as the master of the nested layout
+        nestedMasterDetailLayout.setMaster(masterContent);
+        
+        // Set up event listeners for the nested layout
+        nestedMasterDetailLayout.addBackdropClickListener(e -> hideNestedDetail());
+        nestedMasterDetailLayout.addDetailEscapePressListener(e -> hideNestedDetail());
+        
+        // Initially, no detail is shown in the nested layout
+    }    /**
+     * Shows the nested detail panel with placeholder content
+     */
+    private void showNestedDetail() {
+        // Create the nested detail content
+        VerticalLayout nestedDetailContent = createNestedDetailContent();
+        nestedMasterDetailLayout.setDetail(nestedDetailContent);
+    }
+
+    /**
+     * Creates the content for the nested detail panel
+     */
+    private VerticalLayout createNestedDetailContent() {
+        VerticalLayout nestedDetailContent = new VerticalLayout();
+        nestedDetailContent.setSizeFull();
+        nestedDetailContent.setPadding(true);
+        nestedDetailContent.addClassName(LumoUtility.Background.CONTRAST_5);
+        
+        // Header with close button for nested detail
+        H3 nestedTitle = new H3("Additional Role Information");
+        nestedTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
+        
+        Button nestedCloseButton = new Button(new Icon(VaadinIcon.CLOSE));
+        nestedCloseButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+        nestedCloseButton.addClickListener(e -> hideNestedDetail());
+        nestedCloseButton.getStyle().set("margin-left", "auto");
+        
+        HorizontalLayout nestedHeader = new HorizontalLayout(nestedTitle, nestedCloseButton);
+        nestedHeader.setWidthFull();
+        nestedHeader.setAlignItems(HorizontalLayout.Alignment.CENTER);
+        
+        // Placeholder content
+        Paragraph nestedContent = new Paragraph(
+            "This is a nested detail panel showing additional information about the selected role. " +
+            "This demonstrates how Master-Detail Layout can be nested to create multi-level navigation. " +
+            "You can add more detailed information, charts, tables, or any other relevant content here."
+        );
+        nestedContent.addClassNames(LumoUtility.TextColor.BODY);
+        
+        nestedDetailContent.add(nestedHeader, nestedContent);
+        return nestedDetailContent;
+    }
+
+    /**
+     * Hides the nested detail panel
+     */
+    private void hideNestedDetail() {
+        if (nestedMasterDetailLayout != null) {
+            nestedMasterDetailLayout.setDetail(null);
         }
     }
 
