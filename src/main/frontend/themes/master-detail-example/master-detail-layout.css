@@ -67,6 +67,7 @@ vaadin-master-detail-layout.mdl-progress {
 
 @container (width < 1024px) {
     vaadin-master-detail-layout.mdl-progress:has(vaadin-master-detail-layout[has-detail])::part(master) {
+        --_master-min-size: 0px;
         flex-basis: 0%;
         overflow: hidden;
         transition: flex-basis 400ms cubic-bezier(0.78, 0, 0.22, 1);

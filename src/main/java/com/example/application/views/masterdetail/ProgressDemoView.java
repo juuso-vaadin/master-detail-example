@@ -51,7 +51,8 @@ public class ProgressDemoView extends MasterDetailLayout {
         setSizeFull();
         addClassName("mdl-progress");
 
-        setDetailMinSize("400px");
+        setMasterMinSize("320px");
+        setDetailMinSize("320px");
         
         createMasterSection();
         // Detail section will be created when a person is selected
@@ -161,7 +162,7 @@ public class ProgressDemoView extends MasterDetailLayout {
         nestedMasterDetailLayout.setSizeFull();
         nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
         //nestedMasterDetailLayout.setMasterSize("400px");
-        nestedMasterDetailLayout.setDetailMinSize("400px");
+        nestedMasterDetailLayout.setDetailMinSize("320px");
         
         // Create the person form as master of nested layout
         createPersonForm();
