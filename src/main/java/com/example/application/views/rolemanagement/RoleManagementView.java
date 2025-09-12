@@ -118,7 +118,7 @@ public class RoleManagementView extends VerticalLayout {
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
         masterDetailLayout.setSizeFull();
-        masterDetailLayout.addClassName("show-placeholder");
+        masterDetailLayout.addClassNames("show-placeholder", "no-border");
         masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
         
         // Configure MasterDetailLayout
@@ -459,7 +459,7 @@ public class RoleManagementView extends VerticalLayout {
      */
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
-        nestedMasterDetailLayout.addClassName("nested-master-detail");
+        nestedMasterDetailLayout.addClassNames("nested-master-detail", "no-border");
         nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
         //nestedMasterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
         nestedMasterDetailLayout.setSizeFull();

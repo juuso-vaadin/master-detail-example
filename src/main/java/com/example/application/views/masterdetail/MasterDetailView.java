@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * 4. get_image: Final visual verification
  */
 @PageTitle("Master Detail View")
-@Route("master-detail")
+@Route("")
 @Menu(order = 1, icon = LineAwesomeIconUrl.FILE)
 public class MasterDetailView extends MasterDetailLayout {
 
