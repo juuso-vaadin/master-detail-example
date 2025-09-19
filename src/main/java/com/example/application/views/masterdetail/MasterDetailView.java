@@ -45,6 +45,7 @@ public class MasterDetailView extends MasterDetailLayout {
     public MasterDetailView(DataService dataService) {
         this.dataService = dataService;
         setSizeFull();
+        setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
         
         // Configure the MasterDetailLayout
         setMasterMinSize("450px");

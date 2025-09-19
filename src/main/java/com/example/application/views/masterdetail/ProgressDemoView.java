@@ -99,9 +99,25 @@ public class ProgressDemoView extends MasterDetailLayout {
                 addClassName("equal-split");
             }
         });
+        
+        RadioButtonGroup<String> overlayMode = new RadioButtonGroup<>("Overlay mode");
+        overlayMode.setItems("Drawer", "Stack");
+        overlayMode.setValue("Drawer");
+        overlayMode.addClassName(LumoUtility.Padding.Horizontal.MEDIUM);
+        
+        overlayMode.addValueChangeListener(event -> {
+            String selectedValue = event.getValue();
+            setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
+            nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
+            
+            if ("Stack".equals(selectedValue)) {
+                setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+                nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+            }
+        });
 
         // Create master container and set it
-        VerticalLayout masterLayout = new VerticalLayout(splitRatio, grid);
+        VerticalLayout masterLayout = new VerticalLayout(new HorizontalLayout(splitRatio, overlayMode), grid);
         masterLayout.setSizeFull();
         masterLayout.setPadding(false);
         masterLayout.setSpacing(false);
@@ -160,8 +176,6 @@ public class ProgressDemoView extends MasterDetailLayout {
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
         nestedMasterDetailLayout.setSizeFull();
-        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
-        //nestedMasterDetailLayout.setMasterSize("400px");
         nestedMasterDetailLayout.setDetailMinSize("320px");
         
         // Create the person form as master of nested layout
