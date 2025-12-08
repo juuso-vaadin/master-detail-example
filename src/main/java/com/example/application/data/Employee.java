@@ -15,7 +15,7 @@ public class Employee {
     private String status; // e.g., "Active"
     private String avatarUrl;
     private String initials;
-    
+
     // Additional fields for employee detail form
     private String phone;
     private String email;
@@ -32,7 +32,8 @@ public class Employee {
     private LocalDateTime lastChanged;
 
     // Constructors
-    public Employee() {}
+    public Employee() {
+    }
 
     public Employee(String firstName, String lastName, String personalNumber, String status) {
         this.firstName = firstName;

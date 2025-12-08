@@ -1,0 +1,3 @@
+vaadin-grid[theme~='row-height-full'] vaadin-grid-cell-content {
+    min-height: 100%;
+}

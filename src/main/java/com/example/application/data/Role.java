@@ -17,9 +17,10 @@ public class Role {
     private boolean isSelected;
 
     // Constructors
-    public Role() {}
+    public Role() {
+    }
 
-    public Role(String name, LocalDate startDate, LocalDate endDate, 
+    public Role(String name, LocalDate startDate, LocalDate endDate,
                 Integer utilizationRate, String reason) {
         this.name = name;
         this.startDate = startDate;

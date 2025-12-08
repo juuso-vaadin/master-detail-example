@@ -1,18 +1,18 @@
-vaadin-master-detail-layout.no-border::part(detail) {
+vaadin-master-detail-layout[theme~='no-border']::part(detail) {
     border: none;
 }
 
-vaadin-master-detail-layout.show-placeholder:not([has-detail])::after {
-    content: "Select an item to see details";
-    color: var(--lumo-tertiary-text-color);
-    display: flex;
+vaadin-master-detail-layout[theme~='show-placeholder']:not([has-detail])::after {
     align-items: center;
+    color: var(--lumo-tertiary-text-color);
+    content: "Select an item to see details";
+    display: flex;
+    height: 100%;
     justify-content: center;
     width: 100%;
-    height: 100%;
 }
 
-vaadin-master-detail-layout[drawer] vaadin-master-detail-layout.nested-master-detail {
+vaadin-master-detail-layout[drawer] vaadin-master-detail-layout#nested-master-detail {
     padding: 0;
 
     .border {
@@ -55,7 +55,7 @@ vaadin-master-detail-layout[drawer] .detail-close-button {
     vaadin-master-detail-layout[orientation="horizontal"][has-master-size]::part(master) {
         flex-grow: 1;
     }
-    vaadin-master-detail-layout.show-placeholder:not([has-detail])::after {
+    vaadin-master-detail-layout[theme~='show-placeholder']:not([has-detail])::after {
         display: none;
     }
 }
