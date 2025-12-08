@@ -29,21 +29,21 @@ public class RoleService {
         Random random = new Random(42); // Fixed seed for consistent data
 
         String[] roleNames = {
-            "Product Owner", "Scrum Master", "UX Designer", "UI Designer",
-            "Frontend Developer", "Backend Developer", "Full Stack Developer",
-            "DevOps Engineer", "QA Engineer", "Test Automation Engineer",
-            "Business Analyst", "Data Analyst", "Data Scientist", "ML Engineer",
-            "Solution Architect", "Technical Lead", "Engineering Manager", "Project Manager",
-            "Product Manager", "Marketing Manager", "Sales Manager", "HR Manager",
-            "Software Engineer", "Senior Developer", "Junior Developer", "Intern",
-            "UX Researcher", "Content Writer", "Graphic Designer", "Brand Manager"
+                "Product Owner", "Scrum Master", "UX Designer", "UI Designer",
+                "Frontend Developer", "Backend Developer", "Full Stack Developer",
+                "DevOps Engineer", "QA Engineer", "Test Automation Engineer",
+                "Business Analyst", "Data Analyst", "Data Scientist", "ML Engineer",
+                "Solution Architect", "Technical Lead", "Engineering Manager", "Project Manager",
+                "Product Manager", "Marketing Manager", "Sales Manager", "HR Manager",
+                "Software Engineer", "Senior Developer", "Junior Developer", "Intern",
+                "UX Researcher", "Content Writer", "Graphic Designer", "Brand Manager"
         };
 
         String[] reasons = {
-            "Excellent performance", "Good employee", "Team leadership skills",
-            "Technical expertise", "Project requirements", "Strong communication",
-            "Problem-solving abilities", "Innovation and creativity", "Reliable team member",
-            "Strategic thinking", "Client satisfaction", "Process improvement"
+                "Excellent performance", "Good employee", "Team leadership skills",
+                "Technical expertise", "Project requirements", "Strong communication",
+                "Problem-solving abilities", "Innovation and creativity", "Reliable team member",
+                "Strategic thinking", "Client satisfaction", "Process improvement"
         };
 
         for (int i = 0; i < 100; i++) {
@@ -60,7 +60,7 @@ public class RoleService {
 
             // Random start date in the past 3 years
             LocalDate startDate = LocalDate.now()
-                .minusDays(random.nextInt(365 * 3));
+                    .minusDays(random.nextInt(365 * 3));
             role.setStartDate(startDate);
 
             // Create varied end date scenarios to showcase all statuses
