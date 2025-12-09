@@ -20,6 +20,9 @@ import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
@@ -62,6 +65,11 @@ public class RoleManagementView extends Main {
     // Accessibility labels
     private static final String ARIA_ANALYTICS = "View analytics";
     private static final String ARIA_SETTINGS = "Role settings";
+    private static final String ARIA_SELECTION_MODE = "Grid selection mode";
+
+    // Selection mode options
+    private static final String SELECTION_MULTI = "Multi-select";
+    private static final String SELECTION_SINGLE = "Single-select";
 
     private final RoleService roleService;
 
@@ -82,7 +90,7 @@ public class RoleManagementView extends Main {
     private Checkbox teamLeadCheckbox;
 
     // Detail components - stored references to avoid brittle access
-    private H2 roleDetailTitle;
+    private H2 detailTitle;
 
     // Footer components
     private Footer footer;
@@ -93,7 +101,7 @@ public class RoleManagementView extends Main {
         initStyles();
         createHeader();
         createMasterDetailLayout();
-        createViewFooter();
+        createFooter();
 
         loadRoles();
     }
@@ -135,7 +143,7 @@ public class RoleManagementView extends Main {
     /**
      * Creates the view footer outside MasterDetailLayout
      */
-    private void createViewFooter() {
+    private void createFooter() {
         Button cancel = new Button("Cancel");
         cancel.addClickListener(e -> handleCancel());
 
@@ -207,14 +215,35 @@ public class RoleManagementView extends Main {
      */
     private void createToolbar() {
         H3 h3 = new H3("Assigned roles");
-        h3.addClassNames(FontSize.MEDIUM);
+        h3.addClassNames(FontSize.MEDIUM, Margin.End.AUTO);
 
         Button addRole = new Button("Add role");
         addRole.addClickListener(e -> handleAddRole());
 
-        Div toolbar = new Div(h3, addRole);
-        toolbar.addClassNames(AlignItems.CENTER, Display.FLEX, JustifyContent.BETWEEN, Padding.Bottom.SMALL,
-                Padding.Top.LARGE, Width.FULL);
+        Button selectionModeButton = new Button(LumoIcon.COG.create());
+        selectionModeButton.setAriaLabel(ARIA_SELECTION_MODE);
+        selectionModeButton.setTooltipText(ARIA_SELECTION_MODE);
+
+        RadioButtonGroup<String> selectionModeGroup = new RadioButtonGroup<>(ARIA_SELECTION_MODE);
+        selectionModeGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        selectionModeGroup.setItems(SELECTION_MULTI, SELECTION_SINGLE);
+        selectionModeGroup.setValue(SELECTION_MULTI);
+        selectionModeGroup.addValueChangeListener(e -> {
+            if (SELECTION_SINGLE.equals(e.getValue())) {
+                grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+            } else {
+                grid.setSelectionMode(Grid.SelectionMode.MULTI);
+            }
+            grid.deselectAll();
+            attachSelectionListener();
+        });
+
+        Popover selectionModePopover = new Popover(selectionModeGroup);
+        selectionModePopover.setTarget(selectionModeButton);
+
+        Div toolbar = new Div(h3, addRole, selectionModeButton);
+        toolbar.addClassNames(AlignItems.CENTER, Display.FLEX, Gap.XSMALL, Padding.Bottom.SMALL, Padding.Top.LARGE,
+                Width.FULL);
         masterLayout.add(toolbar);
     }
 
@@ -228,16 +257,43 @@ public class RoleManagementView extends Main {
         grid.getStyle().set("--vaadin-grid-cell-padding", "var(--lumo-space-s)");
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
 
-        grid.addComponentColumn(this::createItem);
-        grid.addComponentColumn(this::createButtons).setAutoWidth(true).setFlexGrow(0);
+        grid.addComponentColumn(this::renderRoleItem);
+        grid.addComponentColumn(this::renderActions).setAutoWidth(true).setFlexGrow(0);
 
-        grid.addSelectionListener(e -> {
-            if (e.getFirstSelectedItem().isPresent()) {
-                showRoleDetail(e.getFirstSelectedItem().get());
-            }
-        });
+        attachSelectionListener();
 
         masterLayout.add(grid);
+    }
+
+    /**
+     * Attaches or re-attaches the selection listener to the grid.
+     * This is needed when the selection mode changes dynamically.
+     */
+    private void attachSelectionListener() {
+        grid.addItemClickListener(e -> {
+            Role item = e.getItem();
+            if (grid.getSelectedItems().contains(item)) {
+                grid.deselect(item);
+            } else {
+                grid.select(item);
+            }
+        });
+        grid.getElement().executeJs("""
+                this.addEventListener('keydown', (e) => {
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        const focusedRow = this.shadowRoot.querySelector('[part~="row"][focused]');
+                        if (focusedRow) focusedRow.click();
+                    }
+                });
+                """);
+        grid.addSelectionListener(e -> {
+            if (e.getFirstSelectedItem().isPresent()) {
+                showDetail(e.getFirstSelectedItem().get());
+            } else {
+                hideDetail();
+            }
+        });
     }
 
     /**
@@ -252,16 +308,16 @@ public class RoleManagementView extends Main {
     }
 
     /**
-     * Creates a role item component for grid display
+     * Renders a role item component for grid display
      */
-    private Div createItem(Role role) {
+    private Div renderRoleItem(Role role) {
         return new GridItemLayout(role);
     }
 
     /**
-     * Creates action buttons (analytics and settings) for each role item
+     * Renders action buttons (analytics and settings) for each role item
      */
-    private Div createButtons(Role role) {
+    private Div renderActions(Role role) {
         Button btn1 = new Button(LumoIcon.BAR_CHART.create());
         btn1.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         btn1.setAriaLabel(ARIA_ANALYTICS);
@@ -287,7 +343,7 @@ public class RoleManagementView extends Main {
     /**
      * Shows the detail form for the selected role
      */
-    private void showRoleDetail(Role role) {
+    private void showDetail(Role role) {
         if (nestedMasterDetailLayout == null) {
             createNestedMasterDetailLayout();
         }
@@ -300,10 +356,7 @@ public class RoleManagementView extends Main {
     /**
      * Creates form fields for role editing
      */
-    private VerticalLayout createFormFields() {
-        VerticalLayout fields = new VerticalLayout();
-        fields.setPadding(false);
-
+    private Div createFormFields() {
         HorizontalLayout dateFields = new HorizontalLayout();
         dateFields.setWidthFull();
 
@@ -333,33 +386,31 @@ public class RoleManagementView extends Main {
 
         checkboxGroup.add(headOfficeCheckbox, teamLeadCheckbox);
 
-        fields.add(dateFields, utilizationField, reasonComboBox, checkboxGroup);
+        Div fields = new Div(dateFields, utilizationField, reasonComboBox, checkboxGroup);
+        fields.addClassNames(Display.FLEX, FlexDirection.COLUMN);
         return fields;
     }
 
     /**
      * Creates the info card displayed alongside the form
      */
-    private VerticalLayout createInfoCard() {
-        VerticalLayout card = new VerticalLayout();
-        card.setPadding(true);
-        card.addClassNames(Background.CONTRAST_5, BorderRadius.MEDIUM);
+    private Div createInfoCard() {
+        H3 title = new H3("Role info");
+        title.addClassNames(FontSize.LARGE);
 
-        H3 cardTitle = new H3("Role info");
-        cardTitle.addClassNames(TextColor.HEADER, FontSize.LARGE, FontWeight.SEMIBOLD);
-
-        Paragraph cardContent = new Paragraph(
+        Paragraph content = new Paragraph(
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
                         "Phasellus tellus dui, fringilla nec dictum at, pellentesque sed leo. " +
                         "Donec tellus tellus, ultricies non risus volutpat, gravida luctus ante."
         );
-        cardContent.addClassNames(TextColor.BODY);
 
-        Button showMoreButton = new Button("Show more");
-        showMoreButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        showMoreButton.addClickListener(e -> showNestedDetail());
+        Button button = new Button("Show more", e -> showNestedDetail());
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        card.add(cardTitle, cardContent, showMoreButton);
+        Div card = new Div(title, content, button);
+        card.addClassNames(AlignItems.START, Background.CONTRAST_5, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
+                Flex.AUTO, FlexDirection.COLUMN, Padding.MEDIUM);
+        card.setWidth(INFO_CARD_WIDTH);
         return card;
     }
 
@@ -369,8 +420,8 @@ public class RoleManagementView extends Main {
     private void populateDetailForm(Role role) {
         if (role == null) return;
 
-        if (roleDetailTitle != null) {
-            roleDetailTitle.setText(role.getName());
+        if (detailTitle != null) {
+            detailTitle.setText(role.getName());
         }
 
         startDatePicker.setValue(role.getStartDate());
@@ -386,7 +437,7 @@ public class RoleManagementView extends Main {
      */
     private void hideDetail() {
         masterDetailLayout.setDetail(null);
-        grid.asSingleSelect().clear();
+        grid.deselectAll();
         refreshRoleSelection();
     }
 
@@ -394,11 +445,10 @@ public class RoleManagementView extends Main {
      * Creates a close button with consistent styling
      */
     private Button createCloseButton(Runnable clickHandler) {
-        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
-        closeButton.addClickListener(e -> clickHandler.run());
-        closeButton.getStyle().set("margin-left", "auto");
-        return closeButton;
+        Button button = new Button(new Icon(VaadinIcon.CLOSE), e -> clickHandler.run());
+        button.addClassNames(Margin.Start.AUTO);
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        return button;
     }
 
     /**
@@ -414,38 +464,22 @@ public class RoleManagementView extends Main {
         nestedMasterDetailLayout.setId("nested-master-detail");
         nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
 
-        VerticalLayout masterContent = new VerticalLayout();
-        masterContent.setSizeFull();
-        masterContent.setPadding(true);
-        masterContent.setSpacing(false);
-        masterContent.addClassNames(Border.ALL, BorderRadius.MEDIUM, BorderColor.CONTRAST_10);
-
-        roleDetailTitle = new H2("Product owner");
-        roleDetailTitle.addClassNames(TextColor.HEADER, FontSize.LARGE, FontWeight.SEMIBOLD);
+        detailTitle = new H2("Product owner");
+        detailTitle.addClassNames(FontSize.LARGE);
 
         Button closeButton = createCloseButton(this::hideDetail);
 
-        HorizontalLayout detailHeader = new HorizontalLayout(roleDetailTitle, closeButton);
-        detailHeader.setWidthFull();
-        detailHeader.setAlignItems(HorizontalLayout.Alignment.CENTER);
+        Div header = new Div(detailTitle, closeButton);
+        header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
 
-        HorizontalLayout formContent = new HorizontalLayout();
-        formContent.setSizeFull();
-        formContent.setSpacing(true);
-        formContent.setWrap(true);
-        formContent.addClassNames(AlignContent.START, AlignItems.START);
+        Div form = new Div(createFormFields(), createInfoCard());
+        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexWrap.WRAP, Gap.MEDIUM, MaxHeight.FULL,
+                Overflow.AUTO);
 
-        VerticalLayout formFields = createFormFields();
-        formFields.setWidth("fit-content");
-        formFields.addClassName(Flex.AUTO);
-
-        VerticalLayout infoCard = createInfoCard();
-        infoCard.setWidth(INFO_CARD_WIDTH);
-        infoCard.addClassName(Flex.AUTO);
-
-        formContent.add(formFields, infoCard);
-        masterContent.add(detailHeader, formContent);
-        nestedMasterDetailLayout.setMaster(masterContent);
+        Div masterLayout = new Div(header, form);
+        masterLayout.addClassNames(Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
+                FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL);
+        nestedMasterDetailLayout.setMaster(masterLayout);
 
         nestedMasterDetailLayout.addBackdropClickListener(e -> hideNestedDetail());
         nestedMasterDetailLayout.addDetailEscapePressListener(e -> hideNestedDetail());
