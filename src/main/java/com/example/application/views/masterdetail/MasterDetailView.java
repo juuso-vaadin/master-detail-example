@@ -1,7 +1,7 @@
 package com.example.application.views.masterdetail;
 
-import com.example.application.data.Person;
 import com.example.application.data.Message;
+import com.example.application.data.Person;
 import com.example.application.service.DataService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation following Figma-to-Vaadin guidelines using proper MasterDetailLayout.
- * 
+ * <p>
  * Analysis performed:
  * 1. get_code: Identified Grid, MessageList, and Button (tertiary, icon-only) components
  * 2. get_metadata: Understood layout structure and component hierarchy
@@ -46,11 +46,11 @@ public class MasterDetailView extends MasterDetailLayout {
         this.dataService = dataService;
         setSizeFull();
         setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
-        
+
         // Configure the MasterDetailLayout
         setMasterMinSize("450px");
         setDetailSize("640px");
-        
+
         createMasterSection();
         // Detail section will be created when a person is selected
         setupSelectionListener();
@@ -58,25 +58,25 @@ public class MasterDetailView extends MasterDetailLayout {
 
     /**
      * Creates the master section with Grid component
-     * Based on Figma data-name="Grid" 
+     * Based on Figma data-name="Grid"
      */
     private void createMasterSection() {
         // Create Grid component as identified in Figma metadata
         grid = new Grid<>(Person.class, false);
-        
+
         // Add columns matching the Figma design structure
         grid.addColumn(Person::getFirstName).setHeader("Text").setFlexGrow(1);
         grid.addColumn(Person::getLastName).setHeader("Text").setFlexGrow(1);
         grid.addColumn(person -> String.format("%,d", person.getNumericValue()))
-            .setHeader("Numeric")
-            .setFlexGrow(1)
-            .getElement().getStyle().set("text-align", "right");
+                .setHeader("Numeric")
+                .setFlexGrow(1)
+                .getElement().getStyle().set("text-align", "right");
         grid.addColumn(Person::getTextValue).setHeader("Text").setFlexGrow(1);
-        
+
         // Set data from service
         grid.setItems(dataService.getAllPeople());
         grid.setSizeFull();
-        
+
         // Apply styling to match Figma design
         grid.addClassNames(LumoUtility.Background.BASE);
 
@@ -85,7 +85,7 @@ public class MasterDetailView extends MasterDetailLayout {
         masterLayout.setSizeFull();
         masterLayout.setPadding(false);
         masterLayout.setSpacing(false);
-        
+
         setMaster(masterLayout);
     }
 
@@ -101,12 +101,12 @@ public class MasterDetailView extends MasterDetailLayout {
                 hideDetailSection();
             }
         });
-        
+
         // Add backdrop click listener to hide detail area
         addBackdropClickListener(event -> {
             grid.deselectAll();
         });
-        
+
         // Add escape key listener to hide detail area
         addDetailEscapePressListener(event -> {
             grid.deselectAll();
@@ -120,11 +120,11 @@ public class MasterDetailView extends MasterDetailLayout {
         if (detailContent == null) {
             createDetailSection();
         }
-        
+
         // Update the detail content based on selected person
         // For now, we'll show all messages, but this could be filtered by person
         updateMessageList();
-        
+
         setDetail(detailContent);
     }
 
@@ -169,10 +169,10 @@ public class MasterDetailView extends MasterDetailLayout {
         detailContent.setPadding(false);
         detailContent.setSpacing(false);
         detailContent.expand(messageList);
-        
+
         // Apply styling to match Figma design background
         detailContent.getElement().getStyle()
-            .set("background-color", "var(--lumo-contrast-5pct)");
+                .set("background-color", "var(--lumo-contrast-5pct)");
     }
 
     /**
@@ -182,20 +182,20 @@ public class MasterDetailView extends MasterDetailLayout {
         if (messageList != null) {
             List<Message> messages = dataService.getAllMessages();
             List<MessageListItem> messageItems = messages.stream()
-                .map(msg -> {
-                    MessageListItem item = new MessageListItem(
-                        msg.getContent(),
-                        msg.getTimestamp().toInstant(ZoneOffset.UTC),
-                        msg.getSenderName()
-                    );
-                    if (msg.getAvatarUrl() != null) {
-                        item.setUserImage(msg.getAvatarUrl());
-                    }
-                    item.setUserColorIndex(msg.getUserColorIndex());
-                    return item;
-                })
-                .collect(Collectors.toList());
-            
+                    .map(msg -> {
+                        MessageListItem item = new MessageListItem(
+                                msg.getContent(),
+                                msg.getTimestamp().toInstant(ZoneOffset.UTC),
+                                msg.getSenderName()
+                        );
+                        if (msg.getAvatarUrl() != null) {
+                            item.setUserImage(msg.getAvatarUrl());
+                        }
+                        item.setUserColorIndex(msg.getUserColorIndex());
+                        return item;
+                    })
+                    .collect(Collectors.toList());
+
             messageList.setItems(messageItems);
         }
     }

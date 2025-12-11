@@ -6,7 +6,8 @@ public class Person {
     private Long numericValue;
     private String textValue;
 
-    public Person() {}
+    public Person() {
+    }
 
     public Person(String firstName, String lastName, Long numericValue, String textValue) {
         this.firstName = firstName;

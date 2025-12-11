@@ -1,62 +1,86 @@
 package com.example.application.views.rolemanagement;
 
+import com.example.application.components.GridItemLayout;
+import com.example.application.components.GridVariant;
+import com.example.application.components.MasterDetailLayoutVariant;
 import com.example.application.data.Employee;
 import com.example.application.data.Role;
 import com.example.application.service.RoleService;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.theme.lumo.LumoIcon;
+import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 /**
  * Role Management View implementing the Figma design using proper MasterDetailLayout.
- * 
+ * <p>
  * Analysis performed following guidelines:
  * 1. get_code: Identified Avatar, Card, Button, DatePicker, NumberField, ComboBox, Checkbox components
  * 2. get_variable_defs: Retrieved color and typography definitions
  * 3. get_metadata: Understood layout structure and hierarchy
- * 
+ * <p>
  * Typography mapping based on Figma text styles:
- * - "Heading 2" (28px, Semi Bold) → H1 for "Roles" 
+ * - "Heading 2" (28px, Semi Bold) → H1 for "Roles"
  * - "Heading 4" (18px, Semi Bold) → H2 for "Product owner"
  * - "Heading 5" (16px, Semi Bold) → H3 for "Assigned roles"
  */
 @PageTitle("Role Management")
 @Route("role-management")
 @Menu(order = 2, icon = LineAwesomeIconUrl.USER_COG_SOLID)
-public class RoleManagementView extends VerticalLayout {
+public class RoleManagementView extends Main {
+
+    // Layout dimension constants
+    private static final String MASTER_SIZE = "560px";
+    private static final String DETAIL_MIN_SIZE = "460px";
+    private static final String NESTED_DETAIL_MIN_SIZE = "300px";
+    private static final String INFO_CARD_WIDTH = "300px";
+
+    // Notification messages
+    private static final String MSG_ADD_ROLE = "Add role functionality would be implemented here";
+    private static final String MSG_CHANGES_CANCELLED = "Changes cancelled";
+    private static final String MSG_ROLE_SAVED = "Role saved successfully";
+    private static final String MSG_ROLE_SAVE_FAILED = "Failed to save role: ";
+    private static final String MSG_LOAD_FAILED = "Failed to load roles";
+
+    // Accessibility labels
+    private static final String ARIA_ANALYTICS = "View analytics";
+    private static final String ARIA_SETTINGS = "Role settings";
+    private static final String ARIA_SELECTION_MODE = "Grid selection mode";
+
+    // Selection mode options
+    private static final String SELECTION_MULTI = "Multi-select";
+    private static final String SELECTION_SINGLE = "Single-select";
 
     private final RoleService roleService;
-    
+
     // Main layout components
     private MasterDetailLayout masterDetailLayout;
     private MasterDetailLayout nestedMasterDetailLayout;
-    
+
     // Master section components
-    private VerticalLayout masterContent;
-    private VerticalLayout roleItemsContainer;
-    
+    private Div masterLayout;
+    private com.vaadin.flow.component.grid.Grid<Role> grid;
+
     // Form field components
     private DatePicker startDatePicker;
     private DatePicker endDatePicker;
@@ -64,52 +88,39 @@ public class RoleManagementView extends VerticalLayout {
     private ComboBox<String> reasonComboBox;
     private Checkbox headOfficeCheckbox;
     private Checkbox teamLeadCheckbox;
-    
+
+    // Detail components - stored references to avoid brittle access
+    private H2 detailTitle;
+
     // Footer components
-    private HorizontalLayout footerLayout;
-    
-    private Role currentSelectedRole;
+    private Footer footer;
 
     public RoleManagementView(RoleService roleService) {
         this.roleService = roleService;
-        setSizeFull();
-        setPadding(false);
-        setSpacing(false);
-        
-        initializeLayout();
-        createViewHeader();
+
+        initStyles();
+        createHeader();
         createMasterDetailLayout();
-        createViewFooter();
-        
-        // Load initial data and show first role in detail
+        createFooter();
+
         loadRoles();
     }
 
-    private void initializeLayout() {
-        // Main layout setup based on Figma structure
-        addClassName("role-management-view");
-
+    private void initStyles() {
+        addClassNames(Display.FLEX, FlexDirection.COLUMN, Height.FULL, Width.FULL);
     }
 
     /**
-     * Creates the view header outside of MasterDetailLayout
-     * Using H2 since the application already has H1 in MainLayout
+     * Creates the view header outside of MasterDetailLayout.
+     * Uses H2 since the application already has H1 in MainLayout.
      */
-    private void createViewHeader() {
-        // Main title using H2 for proper heading hierarchy
+    private void createHeader() {
         H2 title = new H2("Roles");
-        title.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.XXLARGE, LumoUtility.FontWeight.SEMIBOLD);
-        
-        // Subtitle using Paragraph for body text
         Paragraph subtitle = new Paragraph("Which roles should this person be assigned to?");
-        subtitle.addClassNames(LumoUtility.TextColor.BODY, LumoUtility.FontSize.MEDIUM);
-        
-        VerticalLayout headerSection = new VerticalLayout(title, subtitle);
-        headerSection.setPadding(false);
-        headerSection.addClassNames(LumoUtility.Padding.Horizontal.LARGE, LumoUtility.Padding.Vertical.MEDIUM);
-        headerSection.setSpacing(false);
-        
-        add(headerSection);
+
+        Div header = new Div(title, subtitle);
+        header.addClassNames(Display.FLEX, FlexDirection.COLUMN, Padding.Horizontal.LARGE, Padding.Vertical.MEDIUM);
+        add(header);
     }
 
     /**
@@ -117,305 +128,289 @@ public class RoleManagementView extends VerticalLayout {
      */
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
-        masterDetailLayout.setSizeFull();
-        masterDetailLayout.addClassNames("show-placeholder", "no-border");
+        masterDetailLayout.addClassNames(Flex.ONE);
+        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
+        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.SHOW_PLACEHOLDER);
         masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
-        
-        // Configure MasterDetailLayout
-        masterDetailLayout.setMasterSize("400px");
-        masterDetailLayout.setDetailMinSize("460px");
-        
+        masterDetailLayout.setMasterSize(MASTER_SIZE);
+        masterDetailLayout.setDetailMinSize(DETAIL_MIN_SIZE);
+        add(masterDetailLayout);
+
         createMasterSection();
         setupMasterDetailEventListeners();
-        
-        add(masterDetailLayout);
-        expand(masterDetailLayout); // Make it take remaining space
     }
 
     /**
-     * Creates the view footer outside of MasterDetailLayout
+     * Creates the view footer outside MasterDetailLayout
      */
-    private void createViewFooter() {
-        Button cancelButton = new Button("Cancel");
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        cancelButton.addClickListener(e -> handleCancel());
-        
-        Button saveButton = new Button("Save and close");
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveButton.addClickListener(e -> handleSave());
-        
-        footerLayout = new HorizontalLayout(cancelButton, saveButton);
-        footerLayout.setWidthFull();
-        footerLayout.setJustifyContentMode(HorizontalLayout.JustifyContentMode.END);
-        footerLayout.setPadding(true);
-        footerLayout.getStyle()
-            .set("background-color", "var(--lumo-contrast-5pct)")
-            .set("border-top", "1px solid var(--lumo-contrast-10pct)");
-        
-        add(footerLayout);
+    private void createFooter() {
+        Button cancel = new Button("Cancel");
+        cancel.addClickListener(e -> handleCancel());
+
+        Button save = new Button("Save and close");
+        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        save.addClickListener(e -> handleSave());
+
+        footer = new Footer(cancel, save);
+        footer.addClassNames(Background.CONTRAST_5, Display.FLEX, Gap.SMALL, JustifyContent.END,
+                Padding.Horizontal.LARGE, Padding.Vertical.SMALL);
+        add(footer);
     }
 
     /**
      * Creates the master section following Figma design:
      * 1. Static header with employee card
-     * 2. Toolbar with "Assigned roles" title and "Add role" button  
-     * 3. Selectable role items
+     * 2. Toolbar with "Assigned roles" title and "Add role" button
+     * 3. Grid displaying selectable role items
      */
     private void createMasterSection() {
-        masterContent = new VerticalLayout();
-        masterContent.setSizeFull();
-        masterContent.setPadding(false);
-        masterContent.addClassNames(LumoUtility.Padding.Horizontal.LARGE);
-        masterContent.setSpacing(false);
-        masterContent.addClassName("master-content");
+        masterLayout = new Div();
+        masterLayout.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Height.FULL,
+                Padding.Horizontal.LARGE, Width.FULL);
+        masterDetailLayout.setMaster(masterLayout);
 
-        // Employee header card - static element
         createEmployeeCard();
-        
-        // Toolbar with "Assigned roles" and "Add role" button
         createToolbar();
-        
-        // Container for role items - will be populated dynamically
-        roleItemsContainer = new VerticalLayout();
-        roleItemsContainer.setPadding(false);
-        roleItemsContainer.setSpacing("var(--lumo-space-s)");
-        roleItemsContainer.addClassName("role-items");
-        
-        masterContent.add(roleItemsContainer);
-        masterDetailLayout.setMaster(masterContent);
+        createGrid();
     }
 
     /**
      * Sets up event listeners for the MasterDetailLayout
      */
     private void setupMasterDetailEventListeners() {
-        // Add backdrop and escape listeners for better UX
         masterDetailLayout.addBackdropClickListener(e -> hideDetail());
         masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
     }
 
     /**
-     * Creates the employee header card based on Figma "Card (Icon & Avatar)" component
+     * Creates the employee header card
      */
     private void createEmployeeCard() {
         Employee employee = roleService.getCurrentEmployee();
-        
-        // Avatar component as identified in Figma
+
         Avatar avatar = new Avatar(employee.getFullName());
         avatar.setAbbreviation(employee.getInitials());
-        avatar.addClassName("employee-avatar");
-        
-        // Employee info section
+
         H3 employeeName = new H3(employee.getFullName());
-        employeeName.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        
+        employeeName.addClassNames(FontSize.LARGE);
+
         Span personalInfo = new Span("Personal no " + employee.getPersonalNumber());
-        personalInfo.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.MEDIUM);
-        
-        VerticalLayout employeeInfo = new VerticalLayout(employeeName, personalInfo);
-        employeeInfo.setPadding(false);
-        employeeInfo.setSpacing(false);
-        employeeInfo.setFlexGrow(1);
-        
-        // Status badge
+        personalInfo.addClassNames(TextColor.SECONDARY);
+
+        Div employeeInfo = new Div(employeeName, personalInfo);
+        employeeInfo.addClassNames(Display.FLEX, Flex.ONE, FlexDirection.COLUMN);
+
         Span statusBadge = new Span(employee.getStatus());
-        statusBadge.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.MEDIUM);
+        statusBadge.addClassNames(FontSize.SMALL, FontWeight.MEDIUM);
         statusBadge.getElement().getThemeList().add("badge success");
-        statusBadge.getStyle()
-            .set("background-color", "var(--lumo-success-color-10pct)")
-            .set("color", "var(--lumo-success-color)")
-            .set("padding", "4px 8px")
-            .set("border-radius", "var(--lumo-border-radius-s)");
-        
-        // Card layout
-        HorizontalLayout cardContent = new HorizontalLayout(avatar, employeeInfo, statusBadge);
-        cardContent.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        cardContent.setWidthFull();
-        cardContent.setPadding(true);
-        cardContent.addClassNames(LumoUtility.Background.BASE, LumoUtility.BorderRadius.MEDIUM);
-        cardContent.getStyle()
-            .set("border", "1px solid var(--lumo-contrast-10pct)");        
-        masterContent.add(cardContent);
+
+        Div employeeCard = new Div(avatar, employeeInfo, statusBadge);
+        employeeCard.addClassNames(AlignItems.CENTER, Background.BASE, Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER,
+                Display.FLEX, Gap.MEDIUM, Padding.MEDIUM, Width.FULL);
+        masterLayout.add(employeeCard);
     }
 
     /**
      * Creates toolbar with "Assigned roles" heading and "Add role" button
      */
     private void createToolbar() {
-        // Section title using H3 for 16px Semi Bold text  
-        H3 sectionTitle = new H3("Assigned roles");
-        sectionTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.MEDIUM, LumoUtility.FontWeight.SEMIBOLD);
-        
-        // Add role button based on Figma "Button" component
-        Button addRoleButton = new Button("Add role");
-        addRoleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        addRoleButton.addClickListener(e -> handleAddRole());
-        
-        HorizontalLayout toolbar = new HorizontalLayout(sectionTitle, addRoleButton);
-        toolbar.setWidthFull();
-        toolbar.setJustifyContentMode(HorizontalLayout.JustifyContentMode.BETWEEN);
-        toolbar.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        toolbar.addClassName(LumoUtility.Padding.Vertical.MEDIUM);
-        
-        masterContent.add(toolbar);
+        H3 h3 = new H3("Assigned roles");
+        h3.addClassNames(FontSize.MEDIUM, Margin.End.AUTO);
+
+        Button addRole = new Button("Add role");
+        addRole.addClickListener(e -> handleAddRole());
+
+        Button selectionModeButton = new Button(LumoIcon.COG.create());
+        selectionModeButton.setAriaLabel(ARIA_SELECTION_MODE);
+        selectionModeButton.setTooltipText(ARIA_SELECTION_MODE);
+
+        RadioButtonGroup<String> selectionModeGroup = new RadioButtonGroup<>(ARIA_SELECTION_MODE);
+        selectionModeGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        selectionModeGroup.setItems(SELECTION_MULTI, SELECTION_SINGLE);
+        selectionModeGroup.setValue(SELECTION_MULTI);
+        selectionModeGroup.addValueChangeListener(e -> {
+            if (SELECTION_SINGLE.equals(e.getValue())) {
+                grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+            } else {
+                grid.setSelectionMode(Grid.SelectionMode.MULTI);
+            }
+            grid.deselectAll();
+            attachSelectionListener();
+        });
+
+        Popover selectionModePopover = new Popover(selectionModeGroup);
+        selectionModePopover.setTarget(selectionModeButton);
+
+        Div toolbar = new Div(h3, addRole, selectionModeButton);
+        toolbar.addClassNames(AlignItems.CENTER, Display.FLEX, Gap.XSMALL, Padding.Bottom.SMALL, Padding.Top.LARGE,
+                Width.FULL);
+        masterLayout.add(toolbar);
     }
 
     /**
-     * Loads and displays role items as selectable cards
+     * Creates and configures the grid for displaying roles with single selection mode
+     */
+    private void createGrid() {
+        grid = new Grid<>();
+        grid.addClassNames("border-x-0");
+        grid.addThemeName(GridVariant.ROW_HEIGHT_FULL);
+        grid.getStyle().set("--vaadin-grid-cell-padding", "var(--lumo-space-s)");
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
+
+        grid.addComponentColumn(this::renderRoleItem);
+        grid.addComponentColumn(this::renderActions).setAutoWidth(true).setFlexGrow(0);
+
+        attachSelectionListener();
+
+        masterLayout.add(grid);
+    }
+
+    /**
+     * Attaches or re-attaches the selection listener to the grid.
+     * This is needed when the selection mode changes dynamically.
+     */
+    private void attachSelectionListener() {
+        grid.addItemClickListener(e -> {
+            Role item = e.getItem();
+            if (grid.getSelectedItems().contains(item)) {
+                grid.deselect(item);
+            } else {
+                grid.select(item);
+            }
+        });
+        grid.getElement().executeJs("""
+                this.addEventListener('keydown', (e) => {
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        const focusedRow = this.shadowRoot.querySelector('[part~="row"][focused]');
+                        if (focusedRow) focusedRow.click();
+                    }
+                });
+                """);
+        grid.addSelectionListener(e -> {
+            if (e.getFirstSelectedItem().isPresent()) {
+                showDetail(e.getFirstSelectedItem().get());
+            } else {
+                hideDetail();
+            }
+        });
+    }
+
+    /**
+     * Loads available roles from the service and displays them in the grid
      */
     private void loadRoles() {
-        roleItemsContainer.removeAll();
-        
-        for (Role role : roleService.getAvailableRoles()) {
-            roleItemsContainer.add(createRoleCard(role));
-        }
-        
-        // Show detail for the first selected role
-        Role selectedRole = roleService.getSelectedRole();
-        if (selectedRole != null) {
-            showRoleDetail(selectedRole);
+        try {
+            grid.setItems(roleService.getAvailableRoles());
+        } catch (Exception e) {
+            Notification.show(MSG_LOAD_FAILED + ": " + e.getMessage());
         }
     }
 
     /**
-     * Creates a selectable role card based on Figma "Card" component using proper slots
+     * Renders a role item component for grid display
      */
-    private Div createRoleCard(Role role) {
-        // Create proper Vaadin Card component
-        Card card = new Card();
-        card.setWidthFull();
-        
-        // Use Card's Title slot for role name (proper semantic heading)
-        H4 roleTitle = new H4(role.getName());
-        roleTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        card.setTitle(roleTitle);
-        
-        // Use Card's Subtitle slot for date range
-        Span dateSubtitle = new Span(role.getDateRange());
-        dateSubtitle.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.MEDIUM);
-        card.setSubtitle(dateSubtitle);
-        
-        // Use Header Suffix slot for utilization badge
-        Span utilizationBadge = new Span(role.getUtilizationRate() + "%");
-        utilizationBadge.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.MEDIUM);
-        utilizationBadge.getStyle()
-            .set("background-color", "var(--lumo-contrast-5pct)")
-            .set("color", "var(--lumo-contrast-80pct)")
-            .set("padding", "4px 8px")
-            .set("border-radius", "var(--lumo-border-radius-s)");
-        card.setHeaderSuffix(utilizationBadge);
-        
-        // Create clickable wrapper (since Card doesn't support click listeners directly)
-        Div cardWrapper = new Div(card);
-        cardWrapper.setWidthFull();
-        
-        // Selection styling based on Figma selected state
-        if (role.isSelected()) {
-            card.getStyle().set("border", "2px solid var(--lumo-primary-color)");
-        } else {
-            card.addThemeVariants(com.vaadin.flow.component.card.CardVariant.LUMO_OUTLINED);
-        }
-        
-        // Click handler for selection on wrapper
-        cardWrapper.addClickListener(e -> {
-            roleService.selectRole(role);
-            refreshRoleSelection();
-            showRoleDetail(role);
-        });
-        
-        cardWrapper.getStyle().set("cursor", "pointer");
-        return cardWrapper;
+    private Div renderRoleItem(Role role) {
+        return new GridItemLayout(role);
+    }
+
+    /**
+     * Renders action buttons (analytics and settings) for each role item
+     */
+    private Div renderActions(Role role) {
+        Button btn1 = new Button(LumoIcon.BAR_CHART.create());
+        btn1.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        btn1.setAriaLabel(ARIA_ANALYTICS);
+        btn1.setTooltipText(ARIA_ANALYTICS);
+
+        Button btn2 = new Button(LumoIcon.COG.create());
+        btn2.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        btn2.setAriaLabel(ARIA_SETTINGS);
+        btn2.setTooltipText(ARIA_SETTINGS);
+
+        Div buttons = new Div(btn1, btn2);
+        buttons.addClassNames(Display.FLEX, Gap.XSMALL);
+        return buttons;
     }
 
     /**
      * Refreshes the visual selection state of role cards
      */
     private void refreshRoleSelection() {
-        loadRoles(); // Reload to update selection styling
+        grid.getDataProvider().refreshAll();
     }
 
     /**
      * Shows the detail form for the selected role
      */
-    private void showRoleDetail(Role role) {
-        currentSelectedRole = role;
+    private void showDetail(Role role) {
         if (nestedMasterDetailLayout == null) {
             createNestedMasterDetailLayout();
         }
-        
+
         // Update form with role data
         populateDetailForm(role);
         masterDetailLayout.setDetail(nestedMasterDetailLayout);
     }
 
     /**
-     * Creates form fields based on Figma components
+     * Creates form fields for role editing
      */
-    private VerticalLayout createFormFields() {
-        VerticalLayout fields = new VerticalLayout();
-        fields.setPadding(false);
-        
-        // Date fields row - DatePicker components as identified in Figma
+    private Div createFormFields() {
         HorizontalLayout dateFields = new HorizontalLayout();
         dateFields.setWidthFull();
-        
+
         startDatePicker = new DatePicker("Start");
-        startDatePicker.setWidthFull(); // Based on Figma metadata
-        
+        startDatePicker.setWidthFull();
+
         endDatePicker = new DatePicker("End");
         endDatePicker.setWidthFull();
-        
+
         dateFields.add(startDatePicker, endDatePicker);
-        
-        // Utilization rate - NumberField with controls as identified in Figma
+
         utilizationField = new IntegerField("Utilisation rate");
         utilizationField.setWidthFull();
         utilizationField.setMin(0);
         utilizationField.setMax(100);
         utilizationField.setStepButtonsVisible(true);
-        
-        // Reason - ComboBox as identified in Figma
+
         reasonComboBox = new ComboBox<>("Reason");
         reasonComboBox.setWidthFull();
         reasonComboBox.setItems(roleService.getAvailableReasons());
-        
-        // Checkboxes - horizontal group as shown in Figma
+
         HorizontalLayout checkboxGroup = new HorizontalLayout();
         checkboxGroup.setSpacing(true);
-        
+
         headOfficeCheckbox = new Checkbox("Head office");
         teamLeadCheckbox = new Checkbox("Team lead");
-        
+
         checkboxGroup.add(headOfficeCheckbox, teamLeadCheckbox);
-        
-        fields.add(dateFields, utilizationField, reasonComboBox, checkboxGroup);
+
+        Div fields = new Div(dateFields, utilizationField, reasonComboBox, checkboxGroup);
+        fields.addClassNames(Display.FLEX, FlexDirection.COLUMN);
         return fields;
     }
 
     /**
-     * Creates the info card on the right side
+     * Creates the info card displayed alongside the form
      */
-    private VerticalLayout createInfoCard() {
-        VerticalLayout card = new VerticalLayout();
-        card.setPadding(true);
-        card.addClassNames(LumoUtility.Background.CONTRAST_5, LumoUtility.BorderRadius.MEDIUM);
-        
-        H3 cardTitle = new H3("Role info");
-        cardTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        
-        Paragraph cardContent = new Paragraph(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-            "Phasellus tellus dui, fringilla nec dictum at, pellentesque sed leo. " +
-            "Donec tellus tellus, ultricies non risus volutpat, gravida luctus ante."
+    private Div createInfoCard() {
+        H3 title = new H3("Role info");
+        title.addClassNames(FontSize.LARGE);
+
+        Paragraph content = new Paragraph(
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                        "Phasellus tellus dui, fringilla nec dictum at, pellentesque sed leo. " +
+                        "Donec tellus tellus, ultricies non risus volutpat, gravida luctus ante."
         );
-        cardContent.addClassNames(LumoUtility.TextColor.BODY);
-        
-        // Show more button to trigger nested master-detail
-        Button showMoreButton = new Button("Show more");
-        showMoreButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        showMoreButton.addClickListener(e -> showNestedDetail());
-        
-        card.add(cardTitle, cardContent, showMoreButton);
+
+        Button button = new Button("Show more", e -> showNestedDetail());
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        Div card = new Div(title, content, button);
+        card.addClassNames(AlignItems.START, Background.CONTRAST_5, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
+                Flex.AUTO, FlexDirection.COLUMN, Padding.MEDIUM);
+        card.setWidth(INFO_CARD_WIDTH);
         return card;
     }
 
@@ -424,14 +419,11 @@ public class RoleManagementView extends VerticalLayout {
      */
     private void populateDetailForm(Role role) {
         if (role == null) return;
-        
-        // Update detail title (now inside the nested master detail layout's master content)
-        VerticalLayout nestedMasterContent = (VerticalLayout) nestedMasterDetailLayout.getMaster();
-        HorizontalLayout detailHeader = (HorizontalLayout) nestedMasterContent.getComponentAt(0);
-        H2 detailTitle = (H2) detailHeader.getComponentAt(0);
-        detailTitle.setText(role.getName());
-        
-        // Populate form fields
+
+        if (detailTitle != null) {
+            detailTitle.setText(role.getName());
+        }
+
         startDatePicker.setValue(role.getStartDate());
         endDatePicker.setValue(role.getEndDate());
         utilizationField.setValue(role.getUtilizationRate());
@@ -441,89 +433,62 @@ public class RoleManagementView extends VerticalLayout {
     }
 
     /**
-     * Creates the footer with action buttons
+     * Hides the detail panel and clears the grid selection
      */
-
     private void hideDetail() {
         masterDetailLayout.setDetail(null);
-        // Deselect current role
-        if (currentSelectedRole != null) {
-            currentSelectedRole.setSelected(false);
-            currentSelectedRole = null;
-            refreshRoleSelection();
-        }
+        grid.deselectAll();
+        refreshRoleSelection();
     }
 
     /**
-     * Creates the nested MasterDetailLayout that contains the form as master
+     * Creates a close button with consistent styling
+     */
+    private Button createCloseButton(Runnable clickHandler) {
+        Button button = new Button(new Icon(VaadinIcon.CLOSE), e -> clickHandler.run());
+        button.addClassNames(Margin.Start.AUTO);
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        return button;
+    }
+
+    /**
+     * Creates the nested MasterDetailLayout that contains the form as master.
+     * This layout is shown in the main layout's detail area, creating a nested structure
+     * that allows for additional detail panels within the role editing form.
      */
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
-        nestedMasterDetailLayout.addClassNames("nested-master-detail", "no-border");
+        nestedMasterDetailLayout.addClassNames(Height.FULL, Padding.Bottom.MEDIUM, Padding.Right.MEDIUM, Width.FULL);
+        nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
+        nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
+        nestedMasterDetailLayout.setId("nested-master-detail");
         nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
-        //nestedMasterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
-        nestedMasterDetailLayout.setSizeFull();
-        nestedMasterDetailLayout.setDetailMinSize("300px");
-        nestedMasterDetailLayout.addClassNames(LumoUtility.Padding.Right.MEDIUM, LumoUtility.Padding.Bottom.MEDIUM);
-        
-        // Create the master content as a vertical layout to include header + form
-        VerticalLayout masterContent = new VerticalLayout();
-        masterContent.setSizeFull();
-        masterContent.setPadding(true);
-        masterContent.setSpacing(false);
-        masterContent.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderRadius.MEDIUM, LumoUtility.BorderColor.CONTRAST_10);
-        
-        // Detail header with close button
-        H2 detailTitle = new H2("Product owner");
-        detailTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        
-        // Close button (X icon) - only visible in drawer mode
-        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
-        closeButton.addClickListener(e -> hideDetail());
-        closeButton.addClassName("detail-close-button");
-        closeButton.getStyle().set("margin-left", "auto");
-        
-        // Header layout with title and close button
-        HorizontalLayout detailHeader = new HorizontalLayout(detailTitle, closeButton);
-        detailHeader.setWidthFull();
-        detailHeader.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        
-        // Create the form content
-        HorizontalLayout formContent = new HorizontalLayout();
-        formContent.setSizeFull();
-        formContent.setSpacing(true);
-        formContent.setWrap(true);
-        formContent.addClassNames(LumoUtility.AlignContent.START, LumoUtility.AlignItems.START);
-        
-        // Left side - form fields
-        VerticalLayout formFields = createFormFields();
-        formFields.setWidth("fit-content");
-        formFields.addClassName(LumoUtility.Flex.AUTO);
-        
-        // Right side - info card
-        VerticalLayout infoCard = createInfoCard();
-        infoCard.setWidth("300px"); // Based on Figma metadata
-        infoCard.addClassName(LumoUtility.Flex.AUTO);
-        
-        formContent.add(formFields, infoCard);
-        
-        // Add header and form content to master
-        masterContent.add(detailHeader, formContent);
-        
-        // Set the master content (header + form) as the master of the nested layout
-        nestedMasterDetailLayout.setMaster(masterContent);
-        
-        // Set up event listeners for the nested layout
+
+        detailTitle = new H2("Product owner");
+        detailTitle.addClassNames(FontSize.LARGE);
+
+        Button closeButton = createCloseButton(this::hideDetail);
+
+        Div header = new Div(detailTitle, closeButton);
+        header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
+
+        Div form = new Div(createFormFields(), createInfoCard());
+        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexWrap.WRAP, Gap.MEDIUM, MaxHeight.FULL,
+                Overflow.AUTO);
+
+        Div masterLayout = new Div(header, form);
+        masterLayout.addClassNames(Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
+                FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL);
+        nestedMasterDetailLayout.setMaster(masterLayout);
+
         nestedMasterDetailLayout.addBackdropClickListener(e -> hideNestedDetail());
         nestedMasterDetailLayout.addDetailEscapePressListener(e -> hideNestedDetail());
-        
-        // Initially, no detail is shown in the nested layout
-    }    /**
+    }
+
+    /**
      * Shows the nested detail panel with placeholder content
      */
     private void showNestedDetail() {
-        // Create the nested detail content
         VerticalLayout nestedDetailContent = createNestedDetailContent();
         nestedMasterDetailLayout.setDetail(nestedDetailContent);
     }
@@ -535,29 +500,24 @@ public class RoleManagementView extends VerticalLayout {
         VerticalLayout nestedDetailContent = new VerticalLayout();
         nestedDetailContent.setSizeFull();
         nestedDetailContent.setPadding(true);
-        nestedDetailContent.addClassName(LumoUtility.Background.CONTRAST_5);
-        
-        // Header with close button for nested detail
+        nestedDetailContent.addClassName(Background.CONTRAST_5);
+
         H3 nestedTitle = new H3("Additional Role Information");
-        nestedTitle.addClassNames(LumoUtility.TextColor.HEADER, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD);
-        
-        Button nestedCloseButton = new Button(new Icon(VaadinIcon.CLOSE));
-        nestedCloseButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
-        nestedCloseButton.addClickListener(e -> hideNestedDetail());
-        nestedCloseButton.getStyle().set("margin-left", "auto");
-        
+        nestedTitle.addClassNames(TextColor.HEADER, FontSize.LARGE, FontWeight.SEMIBOLD);
+
+        Button nestedCloseButton = createCloseButton(this::hideNestedDetail);
+
         HorizontalLayout nestedHeader = new HorizontalLayout(nestedTitle, nestedCloseButton);
         nestedHeader.setWidthFull();
         nestedHeader.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        
-        // Placeholder content
+
         Paragraph nestedContent = new Paragraph(
-            "This is a nested detail panel showing additional information about the selected role. " +
-            "This demonstrates how Master-Detail Layout can be nested to create multi-level navigation. " +
-            "You can add more detailed information, charts, tables, or any other relevant content here."
+                "This is a nested detail panel showing additional information about the selected role. " +
+                        "This demonstrates how Master-Detail Layout can be nested to create multi-level navigation. " +
+                        "You can add more detailed information, charts, tables, or any other relevant content here."
         );
-        nestedContent.addClassNames(LumoUtility.TextColor.BODY);
-        
+        nestedContent.addClassNames(TextColor.BODY);
+
         nestedDetailContent.add(nestedHeader, nestedContent);
         return nestedDetailContent;
     }
@@ -571,29 +531,86 @@ public class RoleManagementView extends VerticalLayout {
         }
     }
 
-    // Event handlers
+    /**
+     * Handles the "Add role" button click event
+     */
     private void handleAddRole() {
-        Notification.show("Add role functionality would be implemented here");
+        Notification.show(MSG_ADD_ROLE);
     }
 
+    /**
+     * Handles the "Cancel" button click event, closing the detail view without saving
+     */
     private void handleCancel() {
         hideDetail();
-        Notification.show("Changes cancelled");
+        Notification.show(MSG_CHANGES_CANCELLED);
     }
 
+    /**
+     * Handles the "Save and close" button click event.
+     * Validates form data and saves the selected role to the service.
+     */
     private void handleSave() {
-        if (currentSelectedRole != null) {
-            // Update role with form values
-            currentSelectedRole.setStartDate(startDatePicker.getValue());
-            currentSelectedRole.setEndDate(endDatePicker.getValue());
-            currentSelectedRole.setUtilizationRate(utilizationField.getValue());
-            currentSelectedRole.setReason(reasonComboBox.getValue());
-            currentSelectedRole.setHeadOffice(headOfficeCheckbox.getValue());
-            currentSelectedRole.setTeamLead(teamLeadCheckbox.getValue());
-            
-            roleService.saveRole(currentSelectedRole);
-            Notification.show("Role saved successfully");
-            hideDetail();
+        Role selectedRole = grid.asSingleSelect().getValue();
+        if (selectedRole == null) {
+            return;
         }
+
+        if (!validateForm()) {
+            return;
+        }
+
+        try {
+            selectedRole.setStartDate(startDatePicker.getValue());
+            selectedRole.setEndDate(endDatePicker.getValue());
+
+            // Handle nullable Integer field with default value
+            Integer utilizationValue = utilizationField.getValue();
+            selectedRole.setUtilizationRate(utilizationValue != null ? utilizationValue : 0);
+
+            selectedRole.setReason(reasonComboBox.getValue());
+            selectedRole.setHeadOffice(headOfficeCheckbox.getValue());
+            selectedRole.setTeamLead(teamLeadCheckbox.getValue());
+
+            roleService.saveRole(selectedRole);
+            Notification.show(MSG_ROLE_SAVED);
+            hideDetail();
+        } catch (Exception e) {
+            Notification.show(MSG_ROLE_SAVE_FAILED + e.getMessage());
+        }
+    }
+
+    /**
+     * Validates the form fields including required fields, date ranges, and utilization rate bounds.
+     *
+     * @return true if all validations pass, false otherwise
+     */
+    private boolean validateForm() {
+        if (startDatePicker.getValue() == null) {
+            Notification.show("Start date is required");
+            startDatePicker.focus();
+            return false;
+        }
+
+        if (endDatePicker.getValue() == null) {
+            Notification.show("End date is required");
+            endDatePicker.focus();
+            return false;
+        }
+
+        if (endDatePicker.getValue().isBefore(startDatePicker.getValue())) {
+            Notification.show("End date must be after start date");
+            endDatePicker.focus();
+            return false;
+        }
+
+        Integer utilization = utilizationField.getValue();
+        if (utilization != null && (utilization < 0 || utilization > 100)) {
+            Notification.show("Utilization rate must be between 0 and 100");
+            utilizationField.focus();
+            return false;
+        }
+
+        return true;
     }
 }

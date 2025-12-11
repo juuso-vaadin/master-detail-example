@@ -9,7 +9,8 @@ public class Message {
     private String avatarUrl;
     private int userColorIndex;
 
-    public Message() {}
+    public Message() {
+    }
 
     public Message(String senderName, String content, LocalDateTime timestamp) {
         this.senderName = senderName;
