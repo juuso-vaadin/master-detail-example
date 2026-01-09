@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  */
 @PageTitle("Master Detail View")
 @Route("")
-@Menu(order = 1, icon = LineAwesomeIconUrl.FILE)
+@Menu(icon = LineAwesomeIconUrl.FILE)
 public class MasterDetailView extends MasterDetailLayout {
 
     private final DataService dataService;

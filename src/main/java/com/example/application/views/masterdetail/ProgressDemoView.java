@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @PageTitle("Progress Demo")
 @Route("progress-demo")
-@Menu(order = 2, icon = LineAwesomeIconUrl.FILE)
+@Menu(icon = LineAwesomeIconUrl.FILE)
 public class ProgressDemoView extends MasterDetailLayout {
 
     private final DataService dataService;

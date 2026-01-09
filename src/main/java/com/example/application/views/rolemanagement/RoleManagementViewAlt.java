@@ -31,23 +31,10 @@ import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-/**
- * Role Management View implementing the Figma design using proper MasterDetailLayout.
- * <p>
- * Analysis performed following guidelines:
- * 1. get_code: Identified Avatar, Card, Button, DatePicker, NumberField, ComboBox, Checkbox components
- * 2. get_variable_defs: Retrieved color and typography definitions
- * 3. get_metadata: Understood layout structure and hierarchy
- * <p>
- * Typography mapping based on Figma text styles:
- * - "Heading 2" (28px, Semi Bold) → H1 for "Roles"
- * - "Heading 4" (18px, Semi Bold) → H2 for "Product owner"
- * - "Heading 5" (16px, Semi Bold) → H3 for "Assigned roles"
- */
-@PageTitle("Role Management")
-@Route("role-management")
+@PageTitle("Role Management (Alt)")
+@Route("role-management-alt")
 @Menu(icon = LineAwesomeIconUrl.USER_COG_SOLID)
-public class RoleManagementView extends Main {
+public class RoleManagementViewAlt extends Main {
 
     // Layout dimension constants
     private static final String MASTER_SIZE = "560px";
@@ -79,7 +66,8 @@ public class RoleManagementView extends Main {
 
     // Master section components
     private Div masterLayout;
-    private com.vaadin.flow.component.grid.Grid<Role> grid;
+    private Grid<Role> grid;
+    private Role activeRole;
 
     // Form field components
     private DatePicker startDatePicker;
@@ -95,7 +83,7 @@ public class RoleManagementView extends Main {
     // Footer components
     private Footer footer;
 
-    public RoleManagementView(RoleService roleService) {
+    public RoleManagementViewAlt(RoleService roleService) {
         this.roleService = roleService;
 
         initStyles();
@@ -129,6 +117,8 @@ public class RoleManagementView extends Main {
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
         masterDetailLayout.addClassNames(Flex.ONE);
+        masterDetailLayout.addBackdropClickListener(e -> hideDetail());
+        masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
         masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
         masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.SHOW_PLACEHOLDER);
         masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
@@ -137,24 +127,7 @@ public class RoleManagementView extends Main {
         add(masterDetailLayout);
 
         createMasterSection();
-        setupMasterDetailEventListeners();
-    }
 
-    /**
-     * Creates the view footer outside MasterDetailLayout
-     */
-    private void createFooter() {
-        Button cancel = new Button("Cancel");
-        cancel.addClickListener(e -> handleCancel());
-
-        Button save = new Button("Save and close");
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        save.addClickListener(e -> handleSave());
-
-        footer = new Footer(cancel, save);
-        footer.addClassNames(Background.CONTRAST_5, Display.FLEX, Gap.SMALL, JustifyContent.END,
-                Padding.Horizontal.LARGE, Padding.Vertical.SMALL);
-        add(footer);
     }
 
     /**
@@ -172,14 +145,6 @@ public class RoleManagementView extends Main {
         createEmployeeCard();
         createToolbar();
         createGrid();
-    }
-
-    /**
-     * Sets up event listeners for the MasterDetailLayout
-     */
-    private void setupMasterDetailEventListeners() {
-        masterDetailLayout.addBackdropClickListener(e -> hideDetail());
-        masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
     }
 
     /**
@@ -242,8 +207,8 @@ public class RoleManagementView extends Main {
         selectionModePopover.setTarget(selectionModeButton);
 
         Div toolbar = new Div(h3, addRole, selectionModeButton);
-        toolbar.addClassNames(AlignItems.CENTER, Display.FLEX, Gap.XSMALL, Padding.Bottom.SMALL, Padding.Top.LARGE,
-                Width.FULL);
+        toolbar.addClassNames(AlignItems.CENTER, Border.BOTTOM, Display.FLEX, Gap.XSMALL, Padding.Bottom.SMALL,
+                Padding.Top.LARGE, Width.FULL);
         masterLayout.add(toolbar);
     }
 
@@ -252,7 +217,7 @@ public class RoleManagementView extends Main {
      */
     private void createGrid() {
         grid = new Grid<>();
-        grid.addClassNames("border-x-0");
+        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER);
         grid.addThemeName(GridVariant.ROW_HEIGHT_FULL);
         grid.getStyle().set("--vaadin-grid-cell-padding", "var(--lumo-space-s)");
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
@@ -271,29 +236,32 @@ public class RoleManagementView extends Main {
      */
     private void attachSelectionListener() {
         grid.addItemClickListener(e -> {
-            Role item = e.getItem();
-            if (grid.getSelectedItems().contains(item)) {
-                grid.deselect(item);
-            } else {
-                grid.select(item);
+            Role previousActive = activeRole;
+            activeRole = e.getItem();
+            if (previousActive != null) {
+                grid.getDataProvider().refreshItem(previousActive);
             }
+            grid.getDataProvider().refreshItem(activeRole);
+            showDetail(activeRole);
         });
-        grid.getElement().executeJs("""
-                this.addEventListener('keydown', (e) => {
-                    if (e.key === ' ') {
-                        e.preventDefault();
-                        const focusedRow = this.shadowRoot.querySelector('[part~="row"][focused]');
-                        if (focusedRow) focusedRow.click();
-                    }
-                });
-                """);
-        grid.addSelectionListener(e -> {
-            if (e.getFirstSelectedItem().isPresent()) {
-                showDetail(e.getFirstSelectedItem().get());
-            } else {
-                hideDetail();
-            }
-        });
+        grid.setPartNameGenerator(role -> role.equals(activeRole) ? "active" : "");
+    }
+
+    /**
+     * Creates the view footer outside MasterDetailLayout
+     */
+    private void createFooter() {
+        Button cancel = new Button("Cancel");
+        cancel.addClickListener(e -> handleCancel());
+
+        Button save = new Button("Save and close");
+        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        save.addClickListener(e -> handleSave());
+
+        footer = new Footer(cancel, save);
+        footer.addClassNames(Background.CONTRAST_5, Display.FLEX, Gap.SMALL, JustifyContent.END,
+                Padding.Horizontal.LARGE, Padding.Vertical.SMALL);
+        add(footer);
     }
 
     /**
@@ -323,21 +291,9 @@ public class RoleManagementView extends Main {
         btn1.setAriaLabel(ARIA_ANALYTICS);
         btn1.setTooltipText(ARIA_ANALYTICS);
 
-        Button btn2 = new Button(LumoIcon.COG.create());
-        btn2.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        btn2.setAriaLabel(ARIA_SETTINGS);
-        btn2.setTooltipText(ARIA_SETTINGS);
-
-        Div buttons = new Div(btn1, btn2);
+        Div buttons = new Div(btn1);
         buttons.addClassNames(Display.FLEX, Gap.XSMALL);
         return buttons;
-    }
-
-    /**
-     * Refreshes the visual selection state of role cards
-     */
-    private void refreshRoleSelection() {
-        grid.getDataProvider().refreshAll();
     }
 
     /**
@@ -348,9 +304,52 @@ public class RoleManagementView extends Main {
             createNestedMasterDetailLayout();
         }
 
-        // Update form with role data
         populateDetailForm(role);
         masterDetailLayout.setDetail(nestedMasterDetailLayout);
+    }
+
+    /**
+     * Creates the nested MasterDetailLayout that contains the form as master.
+     * This layout is shown in the main layout's detail area, creating a nested structure
+     * that allows for additional detail panels within the role editing form.
+     */
+    private void createNestedMasterDetailLayout() {
+        nestedMasterDetailLayout = new MasterDetailLayout();
+        nestedMasterDetailLayout.addClassNames(Height.FULL, Padding.Bottom.MEDIUM, Padding.Right.MEDIUM, Width.FULL);
+        nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
+        nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
+        nestedMasterDetailLayout.setId("nested-master-detail");
+        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+
+        detailTitle = new H2("Product owner");
+        detailTitle.addClassNames(FontSize.LARGE);
+
+        Button closeButton = createCloseButton(this::hideDetail);
+
+        Div header = new Div(detailTitle, closeButton);
+        header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
+
+        Div form = new Div(createFormFields(), createInfoCard());
+        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexWrap.WRAP, Gap.MEDIUM, MaxHeight.FULL,
+                Overflow.AUTO);
+
+        Div masterLayout = new Div(header, form);
+        masterLayout.addClassNames(Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
+                FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL);
+        nestedMasterDetailLayout.setMaster(masterLayout);
+
+        nestedMasterDetailLayout.addBackdropClickListener(e -> hideNestedDetail());
+        nestedMasterDetailLayout.addDetailEscapePressListener(e -> hideNestedDetail());
+    }
+
+    /**
+     * Creates a close button with consistent styling
+     */
+    private Button createCloseButton(Runnable clickHandler) {
+        Button button = new Button(new Icon(VaadinIcon.CLOSE), e -> clickHandler.run());
+        button.addClassNames(Margin.Start.AUTO);
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        return button;
     }
 
     /**
@@ -433,59 +432,6 @@ public class RoleManagementView extends Main {
     }
 
     /**
-     * Hides the detail panel and clears the grid selection
-     */
-    private void hideDetail() {
-        masterDetailLayout.setDetail(null);
-        grid.deselectAll();
-        refreshRoleSelection();
-    }
-
-    /**
-     * Creates a close button with consistent styling
-     */
-    private Button createCloseButton(Runnable clickHandler) {
-        Button button = new Button(new Icon(VaadinIcon.CLOSE), e -> clickHandler.run());
-        button.addClassNames(Margin.Start.AUTO);
-        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        return button;
-    }
-
-    /**
-     * Creates the nested MasterDetailLayout that contains the form as master.
-     * This layout is shown in the main layout's detail area, creating a nested structure
-     * that allows for additional detail panels within the role editing form.
-     */
-    private void createNestedMasterDetailLayout() {
-        nestedMasterDetailLayout = new MasterDetailLayout();
-        nestedMasterDetailLayout.addClassNames(Height.FULL, Padding.Bottom.MEDIUM, Padding.Right.MEDIUM, Width.FULL);
-        nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
-        nestedMasterDetailLayout.setId("nested-master-detail");
-        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
-
-        detailTitle = new H2("Product owner");
-        detailTitle.addClassNames(FontSize.LARGE);
-
-        Button closeButton = createCloseButton(this::hideDetail);
-
-        Div header = new Div(detailTitle, closeButton);
-        header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
-
-        Div form = new Div(createFormFields(), createInfoCard());
-        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexWrap.WRAP, Gap.MEDIUM, MaxHeight.FULL,
-                Overflow.AUTO);
-
-        Div masterLayout = new Div(header, form);
-        masterLayout.addClassNames(Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
-                FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL);
-        nestedMasterDetailLayout.setMaster(masterLayout);
-
-        nestedMasterDetailLayout.addBackdropClickListener(e -> hideNestedDetail());
-        nestedMasterDetailLayout.addDetailEscapePressListener(e -> hideNestedDetail());
-    }
-
-    /**
      * Shows the nested detail panel with placeholder content
      */
     private void showNestedDetail() {
@@ -528,6 +474,18 @@ public class RoleManagementView extends Main {
     private void hideNestedDetail() {
         if (nestedMasterDetailLayout != null) {
             nestedMasterDetailLayout.setDetail(null);
+        }
+    }
+
+    /**
+     * Hides the detail panel and clears the grid selection
+     */
+    private void hideDetail() {
+        masterDetailLayout.setDetail(null);
+        if (activeRole != null) {
+            Role previousActive = activeRole;
+            activeRole = null;
+            grid.getDataProvider().refreshItem(previousActive);
         }
     }
 
