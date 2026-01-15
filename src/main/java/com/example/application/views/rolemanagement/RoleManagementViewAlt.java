@@ -38,9 +38,7 @@ public class RoleManagementViewAlt extends Main {
 
     // Layout dimension constants
     private static final String MASTER_SIZE = "560px";
-    private static final String DETAIL_MIN_SIZE = "460px";
     private static final String NESTED_DETAIL_MIN_SIZE = "300px";
-    private static final String INFO_CARD_WIDTH = "300px";
 
     // Notification messages
     private static final String MSG_ADD_ROLE = "Add role functionality would be implemented here";
@@ -82,6 +80,9 @@ public class RoleManagementViewAlt extends Main {
 
     // Footer components
     private Footer footer;
+    
+    // Action buttons
+    private Button removeButton;
 
     public RoleManagementViewAlt(RoleService roleService) {
         this.roleService = roleService;
@@ -89,8 +90,6 @@ public class RoleManagementViewAlt extends Main {
         initStyles();
         createHeader();
         createMasterDetailLayout();
-        createFooter();
-
         loadRoles();
     }
 
@@ -123,7 +122,7 @@ public class RoleManagementViewAlt extends Main {
         masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.SHOW_PLACEHOLDER);
         masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
         masterDetailLayout.setMasterSize(MASTER_SIZE);
-        masterDetailLayout.setDetailMinSize(DETAIL_MIN_SIZE);
+        //masterDetailLayout.setDetailMinSize(DETAIL_MIN_SIZE);
         add(masterDetailLayout);
 
         createMasterSection();
@@ -184,6 +183,13 @@ public class RoleManagementViewAlt extends Main {
 
         Button addRole = new Button("Add role");
         addRole.addClickListener(e -> handleAddRole());
+        
+        removeButton = new Button(new Icon(VaadinIcon.TRASH));
+        removeButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        removeButton.setAriaLabel("Remove selected roles");
+        removeButton.setTooltipText("Remove selected roles");
+        removeButton.setEnabled(false);
+        removeButton.addClickListener(e -> handleRemove());
 
         Button selectionModeButton = new Button(LumoIcon.COG.create());
         selectionModeButton.setAriaLabel(ARIA_SELECTION_MODE);
@@ -206,7 +212,7 @@ public class RoleManagementViewAlt extends Main {
         Popover selectionModePopover = new Popover(selectionModeGroup);
         selectionModePopover.setTarget(selectionModeButton);
 
-        Div toolbar = new Div(h3, addRole, selectionModeButton);
+        Div toolbar = new Div(h3, addRole, removeButton, selectionModeButton);
         toolbar.addClassNames(AlignItems.CENTER, Border.BOTTOM, Display.FLEX, Gap.XSMALL, Padding.Bottom.SMALL,
                 Padding.Top.LARGE, Width.FULL);
         masterLayout.add(toolbar);
@@ -245,12 +251,17 @@ public class RoleManagementViewAlt extends Main {
             showDetail(activeRole);
         });
         grid.setPartNameGenerator(role -> role.equals(activeRole) ? "active" : "");
+        
+        // Update remove button state based on selection
+        grid.addSelectionListener(e -> {
+            removeButton.setEnabled(!e.getAllSelectedItems().isEmpty());
+        });
     }
 
     /**
      * Creates the view footer outside MasterDetailLayout
      */
-    private void createFooter() {
+    private Footer createFooter() {
         Button cancel = new Button("Cancel");
         cancel.addClickListener(e -> handleCancel());
 
@@ -259,9 +270,8 @@ public class RoleManagementViewAlt extends Main {
         save.addClickListener(e -> handleSave());
 
         footer = new Footer(cancel, save);
-        footer.addClassNames(Background.CONTRAST_5, Display.FLEX, Gap.SMALL, JustifyContent.END,
-                Padding.Horizontal.LARGE, Padding.Vertical.SMALL);
-        add(footer);
+        footer.addClassNames(Display.FLEX, Flex.GROW, Gap.SMALL, JustifyContent.END, AlignItems.END, Padding.Top.SMALL);
+        return footer;
     }
 
     /**
@@ -330,10 +340,10 @@ public class RoleManagementViewAlt extends Main {
         header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
 
         Div form = new Div(createFormFields(), createInfoCard());
-        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexWrap.WRAP, Gap.MEDIUM, MaxHeight.FULL,
+        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Gap.MEDIUM, MaxHeight.FULL,
                 Overflow.AUTO);
 
-        Div masterLayout = new Div(header, form);
+        Div masterLayout = new Div(header, form, createFooter());
         masterLayout.addClassNames(Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
                 FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL);
         nestedMasterDetailLayout.setMaster(masterLayout);
@@ -409,7 +419,6 @@ public class RoleManagementViewAlt extends Main {
         Div card = new Div(title, content, button);
         card.addClassNames(AlignItems.START, Background.CONTRAST_5, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
                 Flex.AUTO, FlexDirection.COLUMN, Padding.MEDIUM);
-        card.setWidth(INFO_CARD_WIDTH);
         return card;
     }
 
@@ -495,6 +504,25 @@ public class RoleManagementViewAlt extends Main {
     private void handleAddRole() {
         Notification.show(MSG_ADD_ROLE);
     }
+    
+    /**
+     * Handles the "Remove" button click event.
+     * Shows a notification with employee status and selected role information.
+     */
+    private void handleRemove() {
+        Employee employee = roleService.getCurrentEmployee();
+        var selectedRoles = grid.getSelectedItems();
+        
+        if (selectedRoles.isEmpty()) {
+            return;
+        }
+        
+        String message = String.format("Selected %d role(s) for removal: %s",
+                selectedRoles.size(),
+                selectedRoles.stream().map(Role::getName).reduce((a, b) -> a + ", " + b).orElse(""));
+        
+        Notification.show(message);
+    }
 
     /**
      * Handles the "Cancel" button click event, closing the detail view without saving
@@ -509,8 +537,7 @@ public class RoleManagementViewAlt extends Main {
      * Validates form data and saves the selected role to the service.
      */
     private void handleSave() {
-        Role selectedRole = grid.asSingleSelect().getValue();
-        if (selectedRole == null) {
+        if (activeRole == null) {
             return;
         }
 
@@ -519,18 +546,18 @@ public class RoleManagementViewAlt extends Main {
         }
 
         try {
-            selectedRole.setStartDate(startDatePicker.getValue());
-            selectedRole.setEndDate(endDatePicker.getValue());
+            activeRole.setStartDate(startDatePicker.getValue());
+            activeRole.setEndDate(endDatePicker.getValue());
 
             // Handle nullable Integer field with default value
             Integer utilizationValue = utilizationField.getValue();
-            selectedRole.setUtilizationRate(utilizationValue != null ? utilizationValue : 0);
+            activeRole.setUtilizationRate(utilizationValue != null ? utilizationValue : 0);
 
-            selectedRole.setReason(reasonComboBox.getValue());
-            selectedRole.setHeadOffice(headOfficeCheckbox.getValue());
-            selectedRole.setTeamLead(teamLeadCheckbox.getValue());
+            activeRole.setReason(reasonComboBox.getValue());
+            activeRole.setHeadOffice(headOfficeCheckbox.getValue());
+            activeRole.setTeamLead(teamLeadCheckbox.getValue());
 
-            roleService.saveRole(selectedRole);
+            roleService.saveRole(activeRole);
             Notification.show(MSG_ROLE_SAVED);
             hideDetail();
         } catch (Exception e) {

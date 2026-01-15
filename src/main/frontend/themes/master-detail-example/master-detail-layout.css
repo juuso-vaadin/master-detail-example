@@ -14,6 +14,7 @@ vaadin-master-detail-layout[theme~='show-placeholder']:not([has-detail])::after 
 
 vaadin-master-detail-layout[drawer] vaadin-master-detail-layout#nested-master-detail {
     padding: 0;
+    max-width: 440px;
 
     .border {
         border: none;
@@ -60,6 +61,20 @@ vaadin-master-detail-layout[drawer] .detail-close-button {
     }
 }
 
+/* Fade-in animation for detail content when selection changes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+[animate-in] {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
 /* Progress demo for MDL */
 vaadin-master-detail-layout.mdl-progress {
     container-type: inline-size;
@@ -87,5 +102,12 @@ vaadin-master-detail-layout.mdl-progress {
 
     vaadin-master-detail-layout.equal-split:has(vaadin-master-detail-layout[has-detail])::part(detail) {
         flex-basis: 66%;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    vaadin-master-detail-layout[drawer] vaadin-master-detail-layout#nested-master-detail {
+        max-width: none;
+        width: 100vw;
     }
 }
