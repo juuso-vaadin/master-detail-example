@@ -7,11 +7,6 @@ vaadin-grid:not([theme~='no-row-borders'])::part(active) {
     box-shadow: 0 var(--_lumo-grid-border-width) 0 0 var(--_lumo-grid-selected-row-color);
 }
 
-vaadin-grid:not([reordering])::part(active) {
-    background-image: linear-gradient(var(--_lumo-grid-selected-row-color), var(--_lumo-grid-selected-row-color));
-    background-repeat: repeat;
-}
-
 /* Item selected (i.e. checked) */
 vaadin-grid:not([reordering])::part(selected-row-cell) {
     background-image: none;
@@ -20,3 +15,9 @@ vaadin-grid:not([reordering])::part(selected-row-cell) {
 vaadin-grid:not([theme~='no-row-borders'])::part(selected-row-cell) {
     box-shadow: none;
 }
+
+vaadin-grid:not([reordering])::part(active) {
+    background-image: linear-gradient(var(--_lumo-grid-selected-row-color), var(--_lumo-grid-selected-row-color));
+    background-repeat: repeat;
+}
+
