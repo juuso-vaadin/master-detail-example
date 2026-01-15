@@ -13,18 +13,13 @@ public class GridItemLayout extends Div {
     private Span subtitle1;
     private Span subtitle2;
 
-    private Span topRightBadge;
-    private Span rightInfo1;
-    private Span rightInfo2;
-
     public GridItemLayout(Role role) {
         initStyles();
         initLeftLayout(role);
-        initRightLayout(role);
     }
 
     private void initStyles() {
-        addClassNames(Display.FLEX, Gap.SMALL, JustifyContent.BETWEEN);
+        addClassNames(Display.FLEX, FlexDirection.COLUMN, Gap.XSMALL);
     }
 
     private void initLeftLayout(Role role) {
@@ -49,40 +44,7 @@ public class GridItemLayout extends Div {
         this.subtitle2 = new Span(role.getReason() != null ? role.getReason() : "");
         this.subtitle2.addClassNames(FontSize.XSMALL, TextColor.SECONDARY);
 
-        Div leftLayout = new Div(this.titleLayout, this.subtitle1, this.subtitle2);
-        leftLayout.addClassNames(Display.FLEX, FlexDirection.COLUMN, Gap.XSMALL);
-        add(leftLayout);
-    }
-
-    private void initRightLayout(Role role) {
-        this.topRightBadge = new Span();
-        if (role.isHeadOffice()) {
-            this.topRightBadge.setText("Head office");
-            this.topRightBadge.getElement().getThemeList().add("badge contrast");
-            this.topRightBadge.setVisible(true);
-        } else {
-            this.topRightBadge.setVisible(false);
-        }
-
-        this.rightInfo1 = new Span(role.getUtilizationRate() != null ? role.getUtilizationRate() + "%" : "");
-        this.rightInfo1.addClassNames(FontSize.XSMALL, TextColor.SECONDARY);
-
-        this.rightInfo2 = new Span(getRoleStatus(role));
-        this.rightInfo2.addClassNames(FontSize.XSMALL, TextColor.SECONDARY);
-
-        Div rightLayout = new Div(this.topRightBadge, this.rightInfo1, this.rightInfo2);
-        rightLayout.addClassNames(AlignItems.END, Display.FLEX, FlexDirection.COLUMN, Gap.XSMALL);
-        add(rightLayout);
-    }
-
-    private String getRoleStatus(Role role) {
-        if (role.getEndDate() == null) {
-            return "Ongoing";
-        }
-        if (role.getEndDate().isAfter(java.time.LocalDate.now())) {
-            return "Active";
-        }
-        return "Completed";
+        add(this.titleLayout, this.subtitle1, this.subtitle2);
     }
 
     public void setTitle(String text) {
@@ -103,18 +65,6 @@ public class GridItemLayout extends Div {
 
     public void setSubtitle2(String text) {
         this.subtitle2.setText(text);
-    }
-
-    public Span getTopRightBadge() {
-        return this.topRightBadge;
-    }
-
-    public void setRightInfo1(String text) {
-        this.rightInfo1.setText(text);
-    }
-
-    public void setRightInfo2(String text) {
-        this.rightInfo2.setText(text);
     }
 
 }

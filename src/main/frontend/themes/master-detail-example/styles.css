@@ -1,7 +1,3 @@
 @import url('./main-layout.css');
 @import url('./grid.css');
 @import url('./master-detail-layout.css');
-
-.border-x-0 {
-    border-inline-width: 0;
-}
