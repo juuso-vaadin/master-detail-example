@@ -61,20 +61,6 @@ vaadin-master-detail-layout[drawer] .detail-close-button {
     }
 }
 
-/* Fade-in animation for detail content when selection changes */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-[animate-in] {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
 /* Progress demo for MDL */
 vaadin-master-detail-layout.mdl-progress {
     container-type: inline-size;
