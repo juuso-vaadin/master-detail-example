@@ -91,9 +91,12 @@ vaadin-master-detail-layout.mdl-progress {
     }
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 640px) {
     vaadin-master-detail-layout[drawer] vaadin-master-detail-layout#nested-master-detail {
         max-width: none;
+    }
+    
+    #nested-master-content {
         width: 100vw;
     }
 }

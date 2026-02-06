@@ -17,6 +17,8 @@ import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
@@ -40,7 +42,7 @@ public class ListObjectPage extends Main {
 
     // Layout dimension constants
     private static final String MASTER_SIZE = "560px";
-    private static final String NESTED_DETAIL_MIN_SIZE = "300px";
+    private static final String NESTED_DETAIL_MIN_SIZE = "100%";
 
     // Accessibility labels
     private static final String ARIA_ANALYTICS = "View analytics";
@@ -61,14 +63,6 @@ public class ListObjectPage extends Main {
     private Div masterLayout;
     private Grid<Role> grid;
     private Role activeRole;
-
-    // Form field components
-    private DatePicker startDatePicker;
-    private DatePicker endDatePicker;
-    private IntegerField utilizationField;
-    private ComboBox<String> reasonComboBox;
-    private Checkbox headOfficeCheckbox;
-    private Checkbox teamLeadCheckbox;
 
     // Detail components
     private H2 detailTitle;
@@ -92,16 +86,16 @@ public class ListObjectPage extends Main {
         addClassNames(Display.FLEX, FlexDirection.COLUMN, Height.FULL, Width.FULL);
     }
 
-    /**
-     * Creates the view header outside of MasterDetailLayout.
-     * Uses H2 since the application already has H1 in MainLayout.
-     */
     private void createHeader() {
-        H2 title = new H2("Roles");
-        Paragraph subtitle = new Paragraph("Which roles should this person be assigned to?");
+        H2 title = new H2("Sozialversicherung");
+        MenuBar menuBar = new MenuBar();
+        menuBar.addItem("Option 1");
+        menuBar.addItem("Option 2");
+        menuBar.addItem("Option 3");
 
-        Div header = new Div(title, subtitle);
-        header.addClassNames(Display.FLEX, FlexDirection.COLUMN, Padding.Horizontal.LARGE, Padding.Vertical.MEDIUM);
+        HorizontalLayout header = new HorizontalLayout(title, menuBar);
+        header.setPadding(true);
+        header.addClassNames(Border.BOTTOM);
         add(header);
     }
 
@@ -124,56 +118,21 @@ public class ListObjectPage extends Main {
 
     }
 
-    /**
-     * Creates the master section following Figma design:
-     * 1. Static header with employee card
-     * 2. Toolbar with "Assigned roles" title and "Add role" button
-     * 3. Grid displaying selectable role items
-     */
     private void createMasterSection() {
         masterLayout = new Div();
         masterLayout.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Height.FULL,
-                Padding.Horizontal.LARGE, Width.FULL);
+                Padding.Horizontal.LARGE, Width.FULL, Border.RIGHT);
         masterDetailLayout.setMaster(masterLayout);
 
-        createEmployeeCard();
         createToolbar();
         createGrid();
-    }
-
-    /**
-     * Creates the employee header card
-     */
-    private void createEmployeeCard() {
-        Employee employee = roleService.getCurrentEmployee();
-
-        Avatar avatar = new Avatar(employee.getFullName());
-        avatar.setAbbreviation(employee.getInitials());
-
-        H3 employeeName = new H3(employee.getFullName());
-        employeeName.addClassNames(FontSize.LARGE);
-
-        Span personalInfo = new Span("Personal no " + employee.getPersonalNumber());
-        personalInfo.addClassNames(TextColor.SECONDARY);
-
-        Div employeeInfo = new Div(employeeName, personalInfo);
-        employeeInfo.addClassNames(Display.FLEX, Flex.ONE, FlexDirection.COLUMN);
-
-        Span statusBadge = new Span(employee.getStatus());
-        statusBadge.addClassNames(FontSize.SMALL, FontWeight.MEDIUM);
-        statusBadge.getElement().getThemeList().add("badge success");
-
-        Div employeeCard = new Div(avatar, employeeInfo, statusBadge);
-        employeeCard.addClassNames(AlignItems.CENTER, Background.BASE, Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER,
-                Display.FLEX, Gap.MEDIUM, Padding.MEDIUM, Width.FULL);
-        masterLayout.add(employeeCard);
     }
 
     /**
      * Creates toolbar with "Assigned roles" heading and "Add role" button
      */
     private void createToolbar() {
-        H3 h3 = new H3("Assigned roles");
+        H3 h3 = new H3("Title");
         h3.addClassNames(FontSize.MEDIUM, Margin.End.AUTO);
 
         Button addRole = new Button("Add role");
@@ -310,7 +269,7 @@ public class ListObjectPage extends Main {
      */
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
-        nestedMasterDetailLayout.addClassNames(Height.FULL, Padding.Bottom.MEDIUM, Padding.Right.MEDIUM, Width.FULL);
+        nestedMasterDetailLayout.setSizeFull();
         nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
         nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
         nestedMasterDetailLayout.setId("nested-master-detail");
@@ -320,18 +279,18 @@ public class ListObjectPage extends Main {
         detailTitle.addClassNames(FontSize.LARGE);
 
         Button closeButton = createCloseButton(this::hideDetail);
+        closeButton.addClassNames(Display.BLOCK, Display.Breakpoint.Small.HIDDEN);
 
         Div header = new Div(detailTitle, closeButton);
         header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
 
-        Div form = new Div(createSection(), createGridSection());
-        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Gap.MEDIUM, MaxHeight.FULL,
-                Overflow.AUTO);
+        Div content = new Div(createSection(), createGridSection());
+        content.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Gap.MEDIUM, MaxHeight.FULL);
 
-        Div masterLayout = new Div(header, form);
-        masterLayout.addClassNames(Border.ALL, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
-                FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL);
-        nestedMasterDetailLayout.setMaster(masterLayout);
+        Div nestedMasterContent = new Div(header, content);
+        nestedMasterContent.setId("nested-master-content");
+        nestedMasterContent.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Height.FULL, Padding.MEDIUM, Width.FULL, Overflow.AUTO);
+        nestedMasterDetailLayout.setMaster(nestedMasterContent);
 
         nestedMasterDetailLayout.addBackdropClickListener(e -> hideNestedDetail());
         nestedMasterDetailLayout.addDetailEscapePressListener(e -> hideNestedDetail());
@@ -498,43 +457,52 @@ public class ListObjectPage extends Main {
         Grid<GridItem> grid = new Grid<>();
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addClassNames(Width.FULL);
+        //TODO: This currently doesn't work in MDL
+        //grid.setAllRowsVisible(true);
 
         // Column 1: Gültig ab (Valid from)
         grid.addColumn(GridItem::getValidFrom)
                 .setHeader("Gültig ab")
+                .setAutoWidth(true)
                 .setSortable(true);
 
         // Column 2: Gültig bis (Valid to)
         grid.addColumn(GridItem::getValidTo)
                 .setHeader("Gültig bis")
+                .setAutoWidth(true)
                 .setSortable(true);
 
         // Column 3: Header 1
         grid.addColumn(GridItem::getHeader1)
                 .setHeader("Header 1")
+                .setAutoWidth(true)
                 .setSortable(true);
 
         // Column 4: Header 2
         grid.addColumn(GridItem::getHeader2)
                 .setHeader("Header 2")
+                .setAutoWidth(true)
                 .setSortable(true);
 
         // Column 5: Header 3 (right-aligned)
         grid.addColumn(GridItem::getHeader3)
                 .setHeader("Header 3")
+                .setAutoWidth(true)
                 .setSortable(true);
 
         // Column 6: Status with badges
         grid.addComponentColumn(this::createStatusBadges)
                 .setHeader("Status")
                 .setSortable(true)
-                .setFlexGrow(2);
+                .setAutoWidth(true)
+                .setFlexGrow(1);
 
         // Column 7: Inline actions
         grid.addComponentColumn(this::createInlineActions)
                 .setHeader("")
                 .setAutoWidth(true)
-                .setFlexGrow(0);
+                .setFlexGrow(0)
+                .setFrozenToEnd(true);
 
         // Set sample data
         grid.setItems(createSampleGridData());
@@ -577,11 +545,11 @@ public class ListObjectPage extends Main {
     private java.util.List<GridItem> createSampleGridData() {
         return java.util.Arrays.asList(
                 new GridItem("TT.MM.JJJJ", "TT.MM.JJJJ", "TT.MM.JJJJ", "Wert", "Betrag €", 
-                        java.util.Arrays.asList("Information", "Information", "Information", "Information")),
+                        java.util.Arrays.asList("Nicht abgerechnet", "Folgeänderungenation ")),
                 new GridItem("TT.MM.JJJJ", "TT.MM.JJJJ", "TT.MM.JJJJ", "Wert", "Betrag €", 
-                        java.util.Arrays.asList("Information", "Information", "Information", "Information")),
+                        java.util.Arrays.asList("Abgerechnet")),
                 new GridItem("TT.MM.JJJJ", "TT.MM.JJJJ", "TT.MM.JJJJ", "Wert", "Betrag €", 
-                        java.util.Arrays.asList("Information", "Information", "Information", "Information"))
+                        java.util.Arrays.asList("Abgerechnet"))
         );
     }
 
@@ -614,24 +582,6 @@ public class ListObjectPage extends Main {
     }
 
     /**
-     * Populates the detail form with role data
-     */
-    private void populateDetailForm(Role role) {
-        if (role == null) return;
-
-        if (detailTitle != null) {
-            detailTitle.setText(role.getName());
-        }
-
-        startDatePicker.setValue(role.getStartDate());
-        endDatePicker.setValue(role.getEndDate());
-        utilizationField.setValue(role.getUtilizationRate());
-        reasonComboBox.setValue(role.getReason());
-        headOfficeCheckbox.setValue(role.isHeadOffice());
-        teamLeadCheckbox.setValue(role.isTeamLead());
-    }
-
-    /**
      * Shows the nested detail panel with form content based on Figma design
      */
     private void showNestedDetail() {
@@ -656,10 +606,7 @@ public class ListObjectPage extends Main {
         Div header = new Div(nestedTitle, nestedCloseButton);
         header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
 
-        // Form with two fieldsets
-        Div form = createFormLayout();
-
-        content.add(header, form);
+        content.add(header, createFormLayout(), createFooter());
         return content;
     }
 
@@ -668,22 +615,17 @@ public class ListObjectPage extends Main {
      */
     private Div createFormLayout() {
         Div form = new Div();
-        form.addClassNames(Display.FLEX, FlexDirection.COLUMN, Gap.MEDIUM, Width.FULL, Padding.MEDIUM);
-
-        // Two-column fieldset layout
-        Div fieldsets = new Div();
-        fieldsets.addClassNames(Display.FLEX, Gap.XLARGE, Width.FULL);
+        form.addClassNames(Display.FLEX, FlexDirection.ROW, FlexWrap.WRAP, Gap.XLARGE, Width.FULL);
 
         // Fieldset 1 (left column)
         Div fieldset1 = createFieldset1();
+        fieldset1.setMaxWidth("440px");
         
         // Fieldset 2 (right column)
         Div fieldset2 = createFieldset2();
+        fieldset2.setMaxWidth("440px");
 
-        fieldsets.add(fieldset1, fieldset2);
-        form.add(fieldsets);
-
-        form.add(createFooter());
+        form.add(fieldset1, fieldset2);
         
         return form;
     }
