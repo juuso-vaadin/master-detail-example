@@ -21,3 +21,7 @@ vaadin-grid:not([reordering])::part(active) {
     background-repeat: repeat;
 }
 
+vaadin-grid.row-hover::part(body-row):hover {
+    --vaadin-grid-cell-background: var(--lumo-contrast-5pct);
+}
+

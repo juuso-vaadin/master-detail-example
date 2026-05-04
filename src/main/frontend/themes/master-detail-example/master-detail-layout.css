@@ -1,3 +1,7 @@
+vaadin-master-detail-layout {
+    z-index: unset;
+}
+
 vaadin-master-detail-layout[theme~='no-border']::part(detail) {
     border: none;
 }
@@ -37,8 +41,8 @@ vaadin-master-detail-layout[drawer] .detail-close-button {
 
 
 @media (prefers-reduced-motion: no-preference) {
-    /* Disable master transition in stacked mode */
-    vaadin-master-detail-layout[orientation='horizontal']::part(backdrop) {
+    /* Hides backdrop */
+    vaadin-master-detail-layout.hide-backdrop[orientation='horizontal']::part(backdrop) {
         display: none;
     }
 

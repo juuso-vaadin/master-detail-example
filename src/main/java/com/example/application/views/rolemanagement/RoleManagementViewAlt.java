@@ -115,7 +115,7 @@ public class RoleManagementViewAlt extends Main {
      */
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
-        masterDetailLayout.addClassNames(Flex.ONE);
+        masterDetailLayout.addClassNames(Flex.ONE, "hide-backdrop");
         masterDetailLayout.addBackdropClickListener(e -> hideDetail());
         masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
         masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
