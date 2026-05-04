@@ -2,6 +2,10 @@ vaadin-master-detail-layout {
     z-index: unset;
 }
 
+vaadin-master-detail-layout:not([overlay-containment='page']) {
+    z-index: 0;
+}
+
 vaadin-master-detail-layout[theme~='no-border']::part(detail) {
     border: none;
 }
