@@ -3,7 +3,7 @@ vaadin-master-detail-layout {
 }
 
 vaadin-master-detail-layout:not([overlay-containment='page']) {
-    z-index: 0;
+    z-index: unset;
 }
 
 vaadin-master-detail-layout[theme~='no-border']::part(detail) {
