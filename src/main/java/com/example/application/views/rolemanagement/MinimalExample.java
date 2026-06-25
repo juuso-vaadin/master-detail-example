@@ -27,8 +27,9 @@ public class MinimalExample extends Div {
         masterDetailLayout = new MasterDetailLayout();
         masterDetailLayout.addBackdropClickListener(e -> hideDetail());
         masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
-        masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
+        masterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.PAGE);
         masterDetailLayout.setMasterSize("560px");
+        masterDetailLayout.setExpandDetail(true);
         
         add(masterDetailLayout);
         

@@ -2,7 +2,6 @@ package com.example.application.views.rolemanagement;
 
 import com.example.application.components.GridItemLayout;
 import com.example.application.components.GridVariant;
-import com.example.application.components.MasterDetailLayoutVariant;
 import com.example.application.data.Employee;
 import com.example.application.data.Role;
 import com.example.application.service.RoleService;
@@ -31,29 +30,10 @@ import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-/**
- * Role Management View implementing the Figma design using proper MasterDetailLayout.
- * <p>
- * Analysis performed following guidelines:
- * 1. get_code: Identified Avatar, Card, Button, DatePicker, NumberField, ComboBox, Checkbox components
- * 2. get_variable_defs: Retrieved color and typography definitions
- * 3. get_metadata: Understood layout structure and hierarchy
- * <p>
- * Typography mapping based on Figma text styles:
- * - "Heading 2" (28px, Semi Bold) → H1 for "Roles"
- * - "Heading 4" (18px, Semi Bold) → H2 for "Product owner"
- * - "Heading 5" (16px, Semi Bold) → H3 for "Assigned roles"
- */
 @PageTitle("Role Management")
 @Route("role-management")
 @Menu(icon = LineAwesomeIconUrl.USER_COG_SOLID)
 public class RoleManagementView extends Main {
-
-    // Layout dimension constants
-    private static final String MASTER_SIZE = "560px";
-    private static final String DETAIL_MIN_SIZE = "460px";
-    private static final String NESTED_DETAIL_MIN_SIZE = "300px";
-    private static final String INFO_CARD_WIDTH = "300px";
 
     // Notification messages
     private static final String MSG_ADD_ROLE = "Add role functionality would be implemented here";
@@ -128,12 +108,10 @@ public class RoleManagementView extends Main {
      */
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
-        masterDetailLayout.addClassNames(Flex.ONE);
-        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.SHOW_PLACEHOLDER);
-        masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
-        masterDetailLayout.setMasterSize(MASTER_SIZE);
-        masterDetailLayout.setDetailMinSize(DETAIL_MIN_SIZE);
+        masterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.PAGE);
+        masterDetailLayout.setMasterSize("560px");
+        masterDetailLayout.setExpandDetail(true);
+        masterDetailLayout.setDetailPlaceholder(new Span("Select an item to see details"));
         add(masterDetailLayout);
 
         createMasterSection();
@@ -410,7 +388,7 @@ public class RoleManagementView extends Main {
         Div card = new Div(title, content, button);
         card.addClassNames(AlignItems.START, Background.CONTRAST_5, BorderRadius.MEDIUM, BoxSizing.BORDER, Display.FLEX,
                 Flex.AUTO, FlexDirection.COLUMN, Padding.MEDIUM);
-        card.setWidth(INFO_CARD_WIDTH);
+        card.setWidth("200px");
         return card;
     }
 
@@ -458,11 +436,10 @@ public class RoleManagementView extends Main {
      */
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
-        nestedMasterDetailLayout.addClassNames(Height.FULL, Padding.Bottom.MEDIUM, Padding.Right.MEDIUM, Width.FULL);
-        nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
-        nestedMasterDetailLayout.setId("nested-master-detail");
-        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+        nestedMasterDetailLayout.setSizeFull();
+        nestedMasterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.LAYOUT);
+        nestedMasterDetailLayout.setForceOverlay(true);
+        nestedMasterDetailLayout.setDetailSize("100%");
 
         detailTitle = new H2("Product owner");
         detailTitle.addClassNames(FontSize.LARGE);

@@ -23,15 +23,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Implementation following Figma-to-Vaadin guidelines using proper MasterDetailLayout.
- * <p>
- * Analysis performed:
- * 1. get_code: Identified Grid, MessageList, and Button (tertiary, icon-only) components
- * 2. get_metadata: Understood layout structure and component hierarchy
- * 3. search_vaadin_docs: Verified proper Vaadin components and APIs including MasterDetailLayout
- * 4. get_image: Final visual verification
- */
 @PageTitle("Master Detail View")
 @Route("")
 @Menu(icon = LineAwesomeIconUrl.FILE)
@@ -45,11 +36,10 @@ public class MasterDetailView extends MasterDetailLayout {
     public MasterDetailView(DataService dataService) {
         this.dataService = dataService;
         setSizeFull();
-        setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
 
         // Configure the MasterDetailLayout
-        setMasterMinSize("450px");
-        setDetailSize("640px");
+        setMasterSize("450px", true);
+        setDetailSize("640px", true);
 
         createMasterSection();
         // Detail section will be created when a person is selected

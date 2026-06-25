@@ -27,6 +27,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: The 33/33/33 split ratio example is not yet working as expected.
+
 @PageTitle("Progress Demo")
 @Route("progress-demo")
 @Menu(icon = LineAwesomeIconUrl.FILE)
@@ -50,8 +52,8 @@ public class ProgressDemoView extends MasterDetailLayout {
         setSizeFull();
         addClassName("mdl-progress");
 
-        setMasterMinSize("320px");
-        setDetailMinSize("320px");
+        setMasterSize("320px", true);
+        setDetailSize("320px", true);
 
         createMasterSection();
         // Detail section will be created when a person is selected
@@ -106,12 +108,10 @@ public class ProgressDemoView extends MasterDetailLayout {
 
         overlayMode.addValueChangeListener(event -> {
             String selectedValue = event.getValue();
-            setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
-            nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.DRAWER);
 
             if ("Stack".equals(selectedValue)) {
-                setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
-                nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+                setOverlaySize("100%");
+                nestedMasterDetailLayout.setOverlaySize("100%");
             }
         });
 
@@ -175,7 +175,7 @@ public class ProgressDemoView extends MasterDetailLayout {
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
         nestedMasterDetailLayout.setSizeFull();
-        nestedMasterDetailLayout.setDetailMinSize("320px");
+        nestedMasterDetailLayout.setDetailSize("320px");
 
         // Create the person form as master of nested layout
         createPersonForm();

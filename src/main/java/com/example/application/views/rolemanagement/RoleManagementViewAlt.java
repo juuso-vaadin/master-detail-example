@@ -2,7 +2,6 @@ package com.example.application.views.rolemanagement;
 
 import com.example.application.components.GridItemLayout;
 import com.example.application.components.GridVariant;
-import com.example.application.components.MasterDetailLayoutVariant;
 import com.example.application.data.Employee;
 import com.example.application.data.Role;
 import com.example.application.service.RoleService;
@@ -115,14 +114,12 @@ public class RoleManagementViewAlt extends Main {
      */
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
-        masterDetailLayout.addClassNames(Flex.ONE, "hide-backdrop");
+        masterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.PAGE);
+        masterDetailLayout.setMasterSize(MASTER_SIZE);
+        masterDetailLayout.setExpandDetail(true);
+        masterDetailLayout.setDetailPlaceholder(new Span("Select an item to see details"));
         masterDetailLayout.addBackdropClickListener(e -> hideDetail());
         masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
-        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.SHOW_PLACEHOLDER);
-        masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
-        masterDetailLayout.setMasterSize(MASTER_SIZE);
-        //masterDetailLayout.setDetailMinSize(DETAIL_MIN_SIZE);
         add(masterDetailLayout);
 
         createMasterSection();
@@ -326,10 +323,9 @@ public class RoleManagementViewAlt extends Main {
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
         nestedMasterDetailLayout.addClassNames(Height.FULL, Padding.Bottom.MEDIUM, Padding.Right.MEDIUM, Width.FULL);
-        nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
-        nestedMasterDetailLayout.setId("nested-master-detail");
-        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+        nestedMasterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.LAYOUT);
+        nestedMasterDetailLayout.setForceOverlay(true);
+        nestedMasterDetailLayout.setDetailSize("100%");
 
         detailTitle = new H2("Product owner");
         detailTitle.addClassNames(FontSize.LARGE);
@@ -340,7 +336,7 @@ public class RoleManagementViewAlt extends Main {
         header.addClassNames(AlignItems.CENTER, Display.FLEX, Width.FULL);
 
         Div form = new Div(createFormFields(), createInfoCard());
-        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Gap.MEDIUM, MaxHeight.FULL,
+        form.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexWrap.WRAP, Gap.MEDIUM, MaxHeight.FULL,
                 Overflow.AUTO);
 
         Div masterLayout = new Div(header, form, createFooter());

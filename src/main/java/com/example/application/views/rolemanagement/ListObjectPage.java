@@ -2,7 +2,6 @@ package com.example.application.views.rolemanagement;
 
 import com.example.application.components.GridItemLayout;
 import com.example.application.components.GridVariant;
-import com.example.application.components.MasterDetailLayoutVariant;
 import com.example.application.data.Employee;
 import com.example.application.data.Role;
 import com.example.application.service.RoleService;
@@ -17,7 +16,6 @@ import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
-import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -39,10 +37,6 @@ import org.vaadin.lineawesome.LineAwesomeIconUrl;
 @Route("list-object-page")
 @Menu(icon = LineAwesomeIconUrl.USER_COG_SOLID)
 public class ListObjectPage extends Main {
-
-    // Layout dimension constants
-    private static final String MASTER_SIZE = "560px";
-    private static final String NESTED_DETAIL_MIN_SIZE = "100%";
 
     // Accessibility labels
     private static final String ARIA_ANALYTICS = "View analytics";
@@ -105,13 +99,12 @@ public class ListObjectPage extends Main {
     private void createMasterDetailLayout() {
         masterDetailLayout = new MasterDetailLayout();
         masterDetailLayout.addClassNames(Flex.ONE);
+        masterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.PAGE);
+        masterDetailLayout.setMasterSize("560px");
+        masterDetailLayout.setExpandDetail(true);
+        masterDetailLayout.setDetailPlaceholder(new Span("Select an item to see details"));
         masterDetailLayout.addBackdropClickListener(e -> hideDetail());
         masterDetailLayout.addDetailEscapePressListener(e -> hideDetail());
-        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        masterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.SHOW_PLACEHOLDER);
-        masterDetailLayout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
-        masterDetailLayout.setMasterSize(MASTER_SIZE);
-        //masterDetailLayout.setDetailMinSize(DETAIL_MIN_SIZE);
         add(masterDetailLayout);
 
         createMasterSection();
@@ -121,7 +114,7 @@ public class ListObjectPage extends Main {
     private void createMasterSection() {
         masterLayout = new Div();
         masterLayout.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Height.FULL,
-                Padding.Horizontal.LARGE, Width.FULL, Border.RIGHT);
+                Padding.Horizontal.LARGE, Width.FULL);
         masterDetailLayout.setMaster(masterLayout);
 
         createToolbar();
@@ -258,7 +251,9 @@ public class ListObjectPage extends Main {
      * Shows the detail form for the selected role
      */
     private void showDetail(Role role) {
-        createNestedMasterDetailLayout();
+        if (nestedMasterDetailLayout == null) {
+            createNestedMasterDetailLayout();
+        }
         masterDetailLayout.setDetail(nestedMasterDetailLayout);
     }
 
@@ -270,10 +265,10 @@ public class ListObjectPage extends Main {
     private void createNestedMasterDetailLayout() {
         nestedMasterDetailLayout = new MasterDetailLayout();
         nestedMasterDetailLayout.setSizeFull();
-        nestedMasterDetailLayout.getElement().getThemeList().add(MasterDetailLayoutVariant.NO_BORDER);
-        nestedMasterDetailLayout.setDetailMinSize(NESTED_DETAIL_MIN_SIZE);
+        nestedMasterDetailLayout.setOverlayContainment(MasterDetailLayout.OverlayContainment.LAYOUT);
+        nestedMasterDetailLayout.setForceOverlay(true);
+        nestedMasterDetailLayout.setDetailSize("100%");
         nestedMasterDetailLayout.setId("nested-master-detail");
-        nestedMasterDetailLayout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
 
         detailTitle = new H2("Product owner");
         detailTitle.addClassNames(FontSize.LARGE);

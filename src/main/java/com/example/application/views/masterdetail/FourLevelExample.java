@@ -90,15 +90,15 @@ public class FourLevelExample extends Div {
 
     private void configureMdls() {
         level1Mdl.setSizeFull();
-        level1Mdl.setContainment(MasterDetailLayout.Containment.VIEWPORT);
+        level1Mdl.setOverlayContainment(MasterDetailLayout.OverlayContainment.PAGE);
         level1Mdl.setForceOverlay(true);
-        level1Mdl.setDetailMinSize("1000px");
+        level1Mdl.setDetailSize("1000px");
 
         level2Mdl.setSizeFull();
-        level2Mdl.setDetailMinSize("100%");
+        level2Mdl.setDetailSize("100%");
 
         level3Mdl.setSizeFull();
-        level3Mdl.setDetailMinSize("90%");
+        level3Mdl.setDetailSize("90%");
     }
 
     // --------------- Level 1: Project grid ---------------
